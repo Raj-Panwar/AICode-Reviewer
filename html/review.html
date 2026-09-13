@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Review Result - AI Code Reviewer</title>
     <meta name="description" content="Detailed code review results with mentor explanations, Big-O complexity comparison, and IDE code inspection." />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
     <style>
       .review-header-badge-list {
         display: flex;
@@ -396,11 +396,42 @@
               </div>
             </div>
           </div>
+
+          <!-- Actionable Recommendations / Suggestions Section -->
+          <section class="card" id="recommendationsContainer" style="margin-top: 24px; display: block;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Actionable Mentor Recommendations</h3>
+                <div class="card-subtitle">Strategic improvements for reliability, architecture, and performance</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul id="recommendationsList" style="list-style: none; padding: 0; margin: 0;">
+                <!-- Injected dynamically by js/pages/review.js -->
+              </ul>
+            </div>
+          </section>
+
+          <!-- Optimized Code Section with Copy Button -->
+          <section class="card" id="optimizedCodeContainer" style="margin-top: 24px; display: block;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 class="card-title">Optimized Code Solution</h3>
+                <div class="card-subtitle">AI-recommended refactor resolving identified bottlenecks and edge cases</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="copyOptimizedCodeBtn">
+                Copy Code
+              </button>
+            </div>
+            <div class="card-body">
+              <pre class="mentor-fix-diff" style="max-height: 400px; overflow-y: auto; background: #0f172a; color: #f8fafc; padding: 18px; border-radius: var(--radius-md);"><code id="optimizedCodeSnippet">// Optimized code will appear here</code></pre>
+            </div>
+          </section>
         </main>
       </div>
     </div>
 
-    <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/review.js"></script>
+    <script type="module" src="../js/app.js"></script>
+    <script type="module" src="../js/pages/review.js"></script>
   </body>
 </html>

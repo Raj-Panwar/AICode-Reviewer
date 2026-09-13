@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "http://localhost:8080",
+  "timeoutMs": 15000,
+  "environment": "development",
+  "appName": "AI Code Reviewer",
+  "version": "1.0.0"
+}

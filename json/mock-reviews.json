@@ -1,0 +1,553 @@
+[
+  {
+    "id": "REV-2041",
+    "project": "order-processing-pipeline",
+    "repository": "org-fintech/order-processing-pipeline",
+    "branch": "feature/optimize-order-processing",
+    "file": "src/services/OrderProcessor.ts",
+    "language": "TypeScript",
+    "date": "2026-09-13 10:14",
+    "overallScore": 84,
+    "status": "Attention Needed",
+    "timeComplexity": "O(n²)",
+    "spaceComplexity": "O(n)",
+    "counts": {
+      "critical": 1,
+      "bugs": 2,
+      "security": 1,
+      "performance": 2,
+      "complexity": 1,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n²)",
+      "space": "O(n)",
+      "timeExplanation": "Nested iterations over order items and discount rules create quadratic time complexity O(n * m) where n is order items and m is discounts.",
+      "spaceExplanation": "Allocates auxiliary intermediate maps for discount verification.",
+      "bottleneckLine": 34,
+      "isOptimal": false,
+      "recommendedPattern": "Hash Map complement index for constant O(1) discount validation, reducing total runtime to clean linear O(n).",
+      "comparisonTable": [
+        {
+          "metric": "Current Implementation",
+          "time": "O(n²)",
+          "space": "O(n)",
+          "throughput": "~420 ops/sec"
+        },
+        {
+          "metric": "Mentor Recommendation",
+          "time": "O(n)",
+          "space": "O(n)",
+          "throughput": "~12,500 ops/sec"
+        }
+      ]
+    },
+    "codeContent": "import { Injectable, Logger } from '@nestjs/common';\nimport { CustomerRepository } from '../repositories/customer.repository';\nimport { InventoryService } from './inventory.service';\nimport { OrderDto, ProcessedOrderResult, DiscountRule } from '../dto/order.dto';\n\n@Injectable()\nexport class OrderProcessor {\n  private readonly logger = new Logger(OrderProcessor.name);\n\n  constructor(\n    private readonly customerRepo: CustomerRepository,\n    private readonly inventoryService: InventoryService,\n  ) {}\n\n  public async processOrder(order: OrderDto): Promise<ProcessedOrderResult> {\n    const customer = await this.customerRepo.findById(order.customerId);\n    \n    // Issue 1: Missing null check on customer before accessing property\n    this.logger.log(`Processing order for customer status: ${customer.membershipTier}`);\n\n    // Issue 2: Hardcoded credentials fallback\n    const apiKey = process.env.PAYMENT_GATEWAY_KEY || \"test_sk_live_9941a8b72c\";\n\n    let finalTotal = 0;\n\n    // Issue 3: Inefficient O(n * m) nested iteration\n    for (let i = 0; i < order.items.length; i++) {\n      const item = order.items[i];\n      let itemDiscount = 0;\n\n      // Nested scan across active promotional discounts\n      for (let j = 0; j < order.activeDiscounts.length; j++) {\n        const discount = order.activeDiscounts[j];\n        if (discount.applicableCategory === item.category) {\n          itemDiscount += discount.percentage;\n        }\n      }\n\n      const discountedPrice = item.price * (1 - itemDiscount);\n      finalTotal += discountedPrice * item.quantity;\n    }\n\n    return {\n      orderId: order.id,\n      finalAmount: finalTotal,\n      processedAt: new Date().toISOString()\n    };\n  }\n}",
+    "issues": [
+      {
+        "id": "ISSUE-101",
+        "line": 18,
+        "category": "Bugs",
+        "severity": "Critical",
+        "title": "Potential Null Pointer Dereference on Customer Entity",
+        "description": "customerRepo.findById can resolve to null when the customerId is invalid or soft-deleted. Accessing customer.membershipTier directly on line 18 throws an unhandled TypeError in production.",
+        "whyItMatters": "If an anonymous user or deleted customer submits a checkout, this causes a 500 Internal Server Error crash instead of a graceful 404/422 validation response.",
+        "suggestedFix": "if (!customer) {\n  throw new NotFoundException(`Customer with ID ${order.customerId} does not exist`);\n}"
+      },
+      {
+        "id": "ISSUE-102",
+        "line": 21,
+        "category": "Security",
+        "severity": "Critical",
+        "title": "Hardcoded Secret Fallback in Source Code",
+        "description": "Found fallback payment gateway key string in source code. Fallback secrets can easily leak into client bundles, log files, or public repositories.",
+        "whyItMatters": "Exposes critical payment processing privileges if the environment variable is unset during misconfigured deployment pipelines.",
+        "suggestedFix": "const apiKey = process.env.PAYMENT_GATEWAY_KEY;\nif (!apiKey) {\n  throw new InternalServerErrorException(\"PAYMENT_GATEWAY_KEY environment variable is mandatory.\");\n}"
+      },
+      {
+        "id": "ISSUE-103",
+        "line": 30,
+        "category": "Complexity",
+        "severity": "Medium",
+        "title": "Algorithmic Inefficiency: Quadratic O(n*m) Nested Discount Loop",
+        "description": "Looping through order.items with an inner loop over order.activeDiscounts results in quadratic O(n*m) time complexity. Pre-indexing discounts by category in a Map converts this to linear O(n).",
+        "whyItMatters": "Under high flash-sale cart loads with 50+ items and multiple bundled vouchers, this degrades CPU performance by 30x.",
+        "suggestedFix": "const discountMap = new Map<string, number>();\nfor (const d of order.activeDiscounts) {\n  discountMap.set(d.applicableCategory, (discountMap.get(d.applicableCategory) || 0) + d.percentage);\n}\n\nfor (const item of order.items) {\n  const discountRate = discountMap.get(item.category) || 0;\n  finalTotal += (item.price * (1 - discountRate)) * item.quantity;\n}"
+      }
+    ]
+  },
+  {
+    "id": "REV-2042",
+    "project": "ecommerce-checkout-service",
+    "repository": "org-fintech/ecommerce-checkout-service",
+    "branch": "main",
+    "file": "src/main/java/com/fintech/checkout/PaymentProcessor.java",
+    "language": "Java",
+    "date": "2026-09-12 14:30",
+    "overallScore": 89,
+    "status": "Completed",
+    "timeComplexity": "O(n²)",
+    "spaceComplexity": "O(1)",
+    "counts": {
+      "critical": 1,
+      "bugs": 1,
+      "security": 0,
+      "performance": 1,
+      "complexity": 1,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n²)",
+      "space": "O(1)",
+      "timeExplanation": "Nested iteration comparing discount codes against customer wallet keys causes quadratic comparisons on larger catalogs.",
+      "spaceExplanation": "In-place accumulation uses constant auxiliary stack space.",
+      "bottleneckLine": 18,
+      "isOptimal": false,
+      "recommendedPattern": "Pre-aggregate wallet discount prefixes in a HashSet for O(1) lookup.",
+      "comparisonTable": [
+        {
+          "metric": "Current (Nested Scan)",
+          "time": "O(n²)",
+          "space": "O(1)",
+          "throughput": "~1,200 tx/sec"
+        },
+        {
+          "metric": "Optimized (HashSet)",
+          "time": "O(n)",
+          "space": "O(n)",
+          "throughput": "~18,000 tx/sec"
+        }
+      ]
+    },
+    "codeContent": "package com.fintech.checkout;\n\nimport java.math.BigDecimal;\nimport java.util.*;\n\npublic class PaymentProcessor {\n    private final Map<String, BigDecimal> customerWallets = new HashMap<>();\n\n    public boolean processTransaction(String customerId, BigDecimal amount, List<String> discountCodes) {\n        if (customerId == null || customerId.trim().isEmpty()) {\n            throw new IllegalArgumentException(\"Customer ID cannot be empty\");\n        }\n\n        BigDecimal discount = BigDecimal.ZERO;\n\n        // Quadratic nested scan across discount codes and wallet keys\n        for (String code : discountCodes) {\n            for (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {\n                if (entry.getKey().contains(code)) {\n                    discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));\n                }\n            }\n        }\n\n        BigDecimal finalAmount = amount.subtract(discount);\n        return customerWallets.containsKey(customerId);\n    }\n}",
+    "issues": [
+      {
+        "id": "ISSUE-201",
+        "line": 16,
+        "category": "Complexity",
+        "severity": "Medium",
+        "title": "Quadratic Complexity in Wallet Code Matching",
+        "description": "Nested loops compare every discount voucher code against the entire map of customer wallet entries, producing O(k * w) operations.",
+        "whyItMatters": "As wallet items grow, checkout response times degrade significantly from ~15ms to over 300ms during flash sales.",
+        "suggestedFix": "Set<String> applicableCodes = new HashSet<>(discountCodes);\nfor (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {\n    if (applicableCodes.contains(entry.getKey())) {\n        discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));\n    }\n}"
+      },
+      {
+        "id": "ISSUE-202",
+        "line": 25,
+        "category": "Bugs",
+        "severity": "Critical",
+        "title": "BigDecimal Floating Point Rounding Inaccuracy",
+        "description": "BigDecimal.valueOf(0.05) creates subtle precision discrepancies in financial calculations compared to string-based initialization BigDecimal('0.05').",
+        "whyItMatters": "Can lead to multi-cent rounding drifts on large transaction volumes.",
+        "suggestedFix": "discount = discount.add(entry.getValue().multiply(new BigDecimal(\"0.05\")));"
+      }
+    ]
+  },
+  {
+    "id": "REV-2039",
+    "project": "dsa-algorithm-lab",
+    "repository": "rajesh-panwar/dsa-algorithm-lab",
+    "branch": "main",
+    "file": "src/algorithms/search/two_sum_solution.py",
+    "language": "Python",
+    "date": "2026-09-10 18:40",
+    "overallScore": 92,
+    "status": "Completed",
+    "timeComplexity": "O(n²)",
+    "spaceComplexity": "O(1)",
+    "counts": {
+      "critical": 0,
+      "bugs": 0,
+      "security": 0,
+      "performance": 1,
+      "complexity": 1,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n²)",
+      "space": "O(1)",
+      "timeExplanation": "Two nested loops iterate over the array, checking every pair of elements.",
+      "spaceExplanation": "No additional data structures allocated.",
+      "bottleneckLine": 6,
+      "isOptimal": false,
+      "recommendedPattern": "Hash Map Single-Pass O(n) Time, O(n) Space.",
+      "comparisonTable": [
+        {
+          "metric": "Brute Force",
+          "time": "O(n²)",
+          "space": "O(1)",
+          "throughput": "~800 ops/sec"
+        },
+        {
+          "metric": "Hash Map Complement",
+          "time": "O(n)",
+          "space": "O(n)",
+          "throughput": "~35,000 ops/sec"
+        }
+      ]
+    },
+    "codeContent": "def two_sum_quadratic(nums: list[int], target: int) -> list[int]:\n    \"\"\"Quadratic brute force O(n²) comparison.\"\"\"\n    n = len(nums)\n    # Outer and inner loop checking every pair\n    for i in range(n):\n        for j in range(i + 1, n):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n    return []",
+    "issues": [
+      {
+        "id": "ISSUE-301",
+        "line": 5,
+        "category": "Complexity",
+        "severity": "Medium",
+        "title": "Quadratic Time Complexity O(n²) in Pair Sum Lookup",
+        "description": "Brute-force nested loops inspect every pair of numbers in O(n²) time. A single-pass dictionary lookup achieves linear O(n) performance.",
+        "whyItMatters": "On an input of 50,000 elements, O(n²) performs 1.25 billion operations, freezing the thread.",
+        "suggestedFix": "seen = {}\nfor i, num in enumerate(nums):\n    complement = target - num\n    if complement in seen:\n        return [seen[complement], i]\n    seen[num] = i\nreturn []"
+      }
+    ]
+  },
+  {
+    "id": "REV-2040",
+    "project": "auth-gateway-proxy",
+    "repository": "org-fintech/auth-gateway-proxy",
+    "branch": "master",
+    "file": "pkg/jwt/verifier.go",
+    "language": "Go",
+    "date": "2026-09-11 09:15",
+    "overallScore": 95,
+    "status": "Completed",
+    "timeComplexity": "O(1)",
+    "spaceComplexity": "O(1)",
+    "counts": {
+      "critical": 0,
+      "bugs": 0,
+      "security": 0,
+      "performance": 0,
+      "complexity": 0,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(1)",
+      "space": "O(1)",
+      "timeExplanation": "HMAC verification and constant-time string comparison execute in bounded O(1) time relative to the cryptographic signature size.",
+      "spaceExplanation": "Fixed-size 32-byte cryptographic buffer allocated on stack.",
+      "bottleneckLine": 24,
+      "isOptimal": true,
+      "recommendedPattern": "Architecture follows optimal cryptographic constant-time comparison standards.",
+      "comparisonTable": [
+        {
+          "metric": "Current (hmac.Equal)",
+          "time": "O(1)",
+          "space": "O(1)",
+          "throughput": "~48,000 req/sec"
+        }
+      ]
+    },
+    "codeContent": "package jwt\n\nimport (\n\t\"crypto/hmac\"\n\t\"crypto/sha256\"\n\t\"errors\"\n)\n\n// VerifySignature performs constant-time HMAC check\nfunc VerifySignature(token string, secret []byte, expectedSig []byte) (bool, error) {\n\tif len(token) == 0 {\n\t\treturn false, errors.New(\"empty token header\")\n\t}\n\n\tmac := hmac.New(sha256.New, secret)\n\tmac.Write([]byte(token))\n\tcalculatedSig := mac.Sum(nil)\n\n\t// Constant-time comparison defends against timing attacks\n\tif !hmac.Equal(calculatedSig, expectedSig) {\n\t\treturn false, errors.New(\"signature mismatch\")\n\t}\n\n\treturn true, nil\n}",
+    "issues": [
+      {
+        "id": "ISSUE-401",
+        "line": 12,
+        "category": "Quality",
+        "severity": "Low",
+        "title": "Missing Secret Key Length Assertion",
+        "description": "HMAC-SHA256 requires high-entropy keys. Secret slices under 32 bytes should fail validation during gateway startup.",
+        "whyItMatters": "Weak secrets undermine cryptographic guarantees against offline brute-force attacks.",
+        "suggestedFix": "if len(secret) < 32 {\n    return false, errors.New(\"HMAC secret key must be at least 32 bytes\")\n}"
+      }
+    ]
+  },
+  {
+    "id": "REV-2037",
+    "project": "distributed-cache-client",
+    "repository": "org-infra/distributed-cache-client",
+    "branch": "main",
+    "file": "src/ring/consistent_hash.rs",
+    "language": "Rust",
+    "date": "2026-09-08 16:55",
+    "overallScore": 96,
+    "status": "Completed",
+    "timeComplexity": "O(log n)",
+    "spaceComplexity": "O(n)",
+    "counts": {
+      "critical": 0,
+      "bugs": 0,
+      "security": 0,
+      "performance": 0,
+      "complexity": 0,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(log n)",
+      "space": "O(n)",
+      "timeExplanation": "BTreeMap range query searches the balanced red-black ring in logarithmic O(log n) time.",
+      "spaceExplanation": "Stores virtual replica nodes in memory.",
+      "bottleneckLine": 18,
+      "isOptimal": true,
+      "recommendedPattern": "Logarithmic binary search in ordered ring is standard optimal consistent hashing.",
+      "comparisonTable": [
+        {
+          "metric": "Current (BTreeMap Ring)",
+          "time": "O(log n)",
+          "space": "O(n)",
+          "throughput": "~95,000 lookups/sec"
+        }
+      ]
+    },
+    "codeContent": "use std::collections::BTreeMap;\n\npub struct ConsistentHashRing {\n    nodes: BTreeMap<u64, String>,\n    replicas: usize,\n}\n\nimpl ConsistentHashRing {\n    pub fn new(replicas: usize) -> Self {\n        Self {\n            nodes: BTreeMap::new(),\n            replicas,\n        }\n    }\n\n    pub fn get_node(&self, hash_key: u64) -> Option<&String> {\n        if self.nodes.is_empty() {\n            return None;\n        }\n\n        // Binary search log(n) on ordered BTreeMap ring\n        match self.nodes.range(hash_key..).next() {\n            Some((_, node)) => Some(node),\n            None => self.nodes.iter().next().map(|(_, node)| node),\n        }\n    }\n}",
+    "issues": [
+      {
+        "id": "ISSUE-501",
+        "line": 16,
+        "category": "Quality",
+        "severity": "Low",
+        "title": "Consider Returning String Slice &str",
+        "description": "Returning Option<&str> instead of Option<&String> offers cleaner idiomatic Rust interoperability.",
+        "whyItMatters": "Allows callers to borrow slices without binding to the concrete String type.",
+        "suggestedFix": "pub fn get_node(&self, hash_key: u64) -> Option<&str> {\n    // ...\n    Some(node.as_str())\n}"
+      }
+    ]
+  },
+  {
+    "id": "REV-2043",
+    "project": "embedded-telemetry-driver",
+    "repository": "org-iot/embedded-telemetry-driver",
+    "branch": "main",
+    "file": "src/driver/buffer_pool.c",
+    "language": "C",
+    "date": "2026-09-07 14:10",
+    "overallScore": 82,
+    "status": "Attention Needed",
+    "timeComplexity": "O(n)",
+    "spaceComplexity": "O(1)",
+    "counts": {
+      "critical": 1,
+      "bugs": 1,
+      "security": 1,
+      "performance": 1,
+      "complexity": 0,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n)",
+      "space": "O(1)",
+      "timeExplanation": "Linear search across 64 pool slots to locate free memory buffer.",
+      "spaceExplanation": "Static memory allocation with zero dynamic heap churn.",
+      "bottleneckLine": 18,
+      "isOptimal": false,
+      "recommendedPattern": "Bitmask index O(1) bit-scan (e.g. __builtin_ctzll) for instant allocation.",
+      "comparisonTable": [
+        {
+          "metric": "Linear Scan",
+          "time": "O(n)",
+          "space": "O(1)",
+          "throughput": "~180k allocs/sec"
+        },
+        {
+          "metric": "Bitmask Scan",
+          "time": "O(1)",
+          "space": "O(1)",
+          "throughput": "~12M allocs/sec"
+        }
+      ]
+    },
+    "codeContent": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n#define MAX_BUFFERS 64\n#define BUFFER_SIZE 512\n\ntypedef struct {\n    char data[BUFFER_SIZE];\n    int in_use;\n} MemoryBlock;\n\nstatic MemoryBlock pool[MAX_BUFFERS];\n\nint allocate_block(const char* payload, size_t len) {\n    // Potential buffer boundary issue if len >= BUFFER_SIZE\n    if (len >= BUFFER_SIZE) return -1;\n\n    // Linear O(n) search for first available block\n    for (int i = 0; i < MAX_BUFFERS; i++) {\n        if (!pool[i].in_use) {\n            pool[i].in_use = 1;\n            memcpy(pool[i].data, payload, len);\n            pool[i].data[len] = '\\0';\n            return i;\n        }\n    }\n    return -2; // Out of memory\n}",
+    "issues": [
+      {
+        "id": "ISSUE-601",
+        "line": 18,
+        "category": "Bugs",
+        "severity": "Critical",
+        "title": "Missing Null Pointer Check on Payload Buffer",
+        "description": "Function does not check if payload is NULL before calling memcpy, causing segmentation fault on invalid pointer input.",
+        "whyItMatters": "Direct kernel/driver crash in embedded devices upon receiving malformed telemetry packet.",
+        "suggestedFix": "if (payload == NULL) return -3;"
+      },
+      {
+        "id": "ISSUE-602",
+        "line": 20,
+        "category": "Performance",
+        "severity": "Medium",
+        "title": "O(n) Linear Scan for Memory Allocation",
+        "description": "Iterating through an array of structs incurs cache misses. A 64-bit integer bitmask allows O(1) allocation with bitwise instructions.",
+        "whyItMatters": "Reduces allocation jitter under high-throughput sensor telemetry ingestion.",
+        "suggestedFix": "static uint64_t free_mask = ~0ULL; // 1 = free, 0 = used"
+      }
+    ]
+  },
+  {
+    "id": "REV-2044",
+    "project": "realtime-matching-engine",
+    "repository": "org-fintech/realtime-matching-engine",
+    "branch": "main",
+    "file": "src/engine/order_book.cpp",
+    "language": "C++",
+    "date": "2026-09-06 18:20",
+    "overallScore": 79,
+    "status": "Attention Needed",
+    "timeComplexity": "O(n²)",
+    "spaceComplexity": "O(n)",
+    "counts": {
+      "critical": 1,
+      "bugs": 1,
+      "security": 0,
+      "performance": 2,
+      "complexity": 1,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n²)",
+      "space": "O(n)",
+      "timeExplanation": "Linear search followed by std::vector::erase shifts all subsequent elements, yielding O(n) per cancellation and O(n²) under batch cancel.",
+      "spaceExplanation": "Dynamic order book vectors scale linearly with active quotes.",
+      "bottleneckLine": 18,
+      "isOptimal": false,
+      "recommendedPattern": "std::unordered_map + std::list (L2 cache order book) for O(1) order cancellation.",
+      "comparisonTable": [
+        {
+          "metric": "std::vector::erase",
+          "time": "O(n²)",
+          "space": "O(n)",
+          "throughput": "~2,400 cancels/sec"
+        },
+        {
+          "metric": "Map + Doubly-Linked List",
+          "time": "O(1)",
+          "space": "O(n)",
+          "throughput": "~180,000 cancels/sec"
+        }
+      ]
+    },
+    "codeContent": "#include <iostream>\n#include <vector>\n#include <algorithm>\n\nstruct Order {\n    int id;\n    double price;\n    int quantity;\n    bool is_buy;\n};\n\nclass OrderBook {\nprivate:\n    std::vector<Order> buy_orders;\n    std::vector<Order> sell_orders;\n\npublic:\n    void cancel_order(int order_id) {\n        // Inefficient: O(n) scan + O(n) element shifting on erase\n        for (auto it = buy_orders.begin(); it != buy_orders.end(); ++it) {\n            if (it->id == order_id) {\n                buy_orders.erase(it);\n                return;\n            }\n        }\n    }\n};",
+    "issues": [
+      {
+        "id": "ISSUE-701",
+        "line": 18,
+        "category": "Complexity",
+        "severity": "Critical",
+        "title": "std::vector::erase Inefficiencies in High-Frequency Order Book",
+        "description": "Erasing from the middle of a std::vector requires shifting all subsequent elements down in memory, which is O(n). Under high cancellations, this degrades matching latency.",
+        "whyItMatters": "Breaches latency SLA during market volatility spikes.",
+        "suggestedFix": "// Use unordered_map<int, list<Order>::iterator> for O(1) direct node erasure"
+      },
+      {
+        "id": "ISSUE-702",
+        "line": 6,
+        "category": "Performance",
+        "severity": "Medium",
+        "title": "Floating Point Price Representation Risk",
+        "description": "Using double for financial order prices introduces binary floating-point representation rounding inaccuracies.",
+        "whyItMatters": "Fractional cent errors accumulate in matched volume fills.",
+        "suggestedFix": "using Price = std::int64_t; // Fixed-point micro-cents (e.g. 100.50 -> 100500000)"
+      }
+    ]
+  },
+  {
+    "id": "REV-2046",
+    "project": "mobile-android-client",
+    "repository": "org-mobile/mobile-android-client",
+    "branch": "main",
+    "file": "app/src/main/kotlin/com/fintech/app/AccountRepository.kt",
+    "language": "Kotlin",
+    "date": "2026-09-05 12:45",
+    "overallScore": 90,
+    "status": "Completed",
+    "timeComplexity": "O(n)",
+    "spaceComplexity": "O(n)",
+    "counts": {
+      "critical": 0,
+      "bugs": 1,
+      "security": 0,
+      "performance": 1,
+      "complexity": 0,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n)",
+      "space": "O(n)",
+      "timeExplanation": "Linear search across list of cached accounts.",
+      "spaceExplanation": "Keeps active user accounts in memory.",
+      "bottleneckLine": 12,
+      "isOptimal": true,
+      "recommendedPattern": "Maintain a concurrent HashMap index for O(1) direct lookup.",
+      "comparisonTable": [
+        {
+          "metric": "List scan",
+          "time": "O(n)",
+          "space": "O(n)",
+          "throughput": "~14,000 lookups/sec"
+        },
+        {
+          "metric": "HashMap key",
+          "time": "O(1)",
+          "space": "O(n)",
+          "throughput": "~80,000 lookups/sec"
+        }
+      ]
+    },
+    "codeContent": "package com.fintech.app\n\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.withContext\n\ndata class UserAccount(val id: String, val balance: Double, val tier: String)\n\nclass AccountRepository {\n    private val accounts = mutableListOf<UserAccount>()\n\n    suspend fun getAccountById(id: String): UserAccount? = withContext(Dispatchers.IO) {\n        // Linear O(n) lookup across in-memory cache\n        accounts.find { it.id == id }\n    }\n\n    fun addAccount(account: UserAccount) {\n        accounts.add(account)\n    }\n}",
+    "issues": [
+      {
+        "id": "ISSUE-801",
+        "line": 9,
+        "category": "Bugs",
+        "severity": "Medium",
+        "title": "Thread Safety Hazard on MutableList",
+        "description": "mutableListOf is not synchronized. Accessing it concurrently across background coroutines can corrupt internal state or throw ConcurrentModificationException.",
+        "whyItMatters": "Produces random crashes when multiple background sync workers update accounts simultaneously.",
+        "suggestedFix": "private val accounts = java.util.concurrent.ConcurrentHashMap<String, UserAccount>()"
+      }
+    ]
+  },
+  {
+    "id": "REV-2045",
+    "project": "web-dashboard-fe",
+    "repository": "org-web/web-dashboard-fe",
+    "branch": "main",
+    "file": "src/analytics/dataAggregator.js",
+    "language": "JavaScript",
+    "date": "2026-09-04 16:30",
+    "overallScore": 83,
+    "status": "Attention Needed",
+    "timeComplexity": "O(n²)",
+    "spaceComplexity": "O(n)",
+    "counts": {
+      "critical": 0,
+      "bugs": 1,
+      "security": 0,
+      "performance": 2,
+      "complexity": 1,
+      "quality": 1
+    },
+    "complexityAnalysis": {
+      "time": "O(n²)",
+      "space": "O(n)",
+      "timeExplanation": "events.filter with an inner events.indexOf(ev) check causes quadratic iterations over user analytics stream.",
+      "spaceExplanation": "Allocates a new filtered array in memory.",
+      "bottleneckLine": 5,
+      "isOptimal": false,
+      "recommendedPattern": "Remove redundant indexOf or use a Set for O(1) membership check.",
+      "comparisonTable": [
+        {
+          "metric": "filter + indexOf",
+          "time": "O(n²)",
+          "space": "O(n)",
+          "throughput": "~650 ops/sec"
+        },
+        {
+          "metric": "Single filter",
+          "time": "O(n)",
+          "space": "O(n)",
+          "throughput": "~28,000 ops/sec"
+        }
+      ]
+    },
+    "codeContent": "// Analytics metrics aggregator\nexport function aggregateUserSessions(events, targetUserId) {\n  // Quadratic O(n²) filter with redundant inner array scan\n  const userEvents = events.filter((ev) => {\n    return ev.userId === targetUserId && events.indexOf(ev) >= 0;\n  });\n\n  const summary = {\n    totalDuration: 0,\n    pageViews: 0\n  };\n\n  userEvents.forEach(e => {\n    summary.totalDuration += (e.duration || 0);\n    summary.pageViews += 1;\n  });\n\n  return summary;\n}",
+    "issues": [
+      {
+        "id": "ISSUE-901",
+        "line": 5,
+        "category": "Complexity",
+        "severity": "Medium",
+        "title": "Redundant Array.indexOf Inside Filter Predicate",
+        "description": "Calling events.indexOf(ev) inside events.filter turns linear scanning into a quadratic O(n²) performance trap.",
+        "whyItMatters": "On sessions with 20,000 telemetry events, this locks the main browser thread for 4.2 seconds.",
+        "suggestedFix": "const userEvents = events.filter((ev) => ev.userId === targetUserId);"
+      }
+    ]
+  }
+]

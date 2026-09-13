@@ -1,0 +1,78 @@
+[
+  {
+    "name": "Two Sum Problem",
+    "category": "Array & Hash Tables",
+    "difficulty": "Easy to Medium",
+    "currentApproach": {
+      "title": "Nested Loops (Brute Force)",
+      "time": "O(n²)",
+      "space": "O(1)",
+      "description": "For every number, scan the rest of the array to find its complement. Simple to reason about, but scales poorly on large inputs."
+    },
+    "optimizedApproach": {
+      "title": "Hash Map Single-Pass",
+      "time": "O(n)",
+      "space": "O(n)",
+      "description": "Store previously visited elements and their indices in a hash map. Instant O(1) complement lookup reduces time complexity to linear O(n)."
+    },
+    "explanation": "Trading auxiliary space O(n) for a hash table unlocks constant-time lookup, transforming an unscalable O(n²) quadratic runtime into clean linear O(n) performance.",
+    "codeExample": "// Brute Force: O(n²) Time, O(1) Space\nfor (let i = 0; i < nums.length; i++) {\n  for (let j = i + 1; j < nums.length; j++) {\n    if (nums[i] + nums[j] === target) return [i, j];\n  }\n}\n\n// Optimized: O(n) Time, O(n) Space\nconst seen = new Map();\nfor (let i = 0; i < nums.length; i++) {\n  const complement = target - nums[i];\n  if (seen.has(complement)) return [seen.get(complement), i];\n  seen.set(nums[i], i);\n}"
+  },
+  {
+    "name": "Fibonacci Sequence",
+    "category": "Dynamic Programming",
+    "difficulty": "Easy",
+    "currentApproach": {
+      "title": "Naive Recursion",
+      "time": "O(2ⁿ)",
+      "space": "O(n) call stack",
+      "description": "Calls fib(n-1) + fib(n-2) recursively, recalculating the same sub-problems exponentially many times."
+    },
+    "optimizedApproach": {
+      "title": "Bottom-Up Dynamic Programming",
+      "time": "O(n)",
+      "space": "O(1)",
+      "description": "Iterate from 2 to n keeping track of only the two most recent values. Eliminates redundant work completely."
+    },
+    "explanation": "Naive recursion creates an exponential call tree with massive duplicate work. Memoization or constant-space iteration flattens execution into single linear O(n) passes.",
+    "codeExample": "// Naive Recursion: O(2ⁿ) Time, O(n) Stack Space\nfunction fib(n) {\n  if (n <= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}\n\n// Iterative DP: O(n) Time, O(1) Auxiliary Space\nfunction fibOptimized(n) {\n  if (n <= 1) return n;\n  let prev = 0, curr = 1;\n  for (let i = 2; i <= n; i++) {\n    const next = prev + curr;\n    prev = curr;\n    curr = next;\n  }\n  return curr;\n}"
+  },
+  {
+    "name": "Search in Sorted Dataset",
+    "category": "Searching Algorithms",
+    "difficulty": "Fundamental",
+    "currentApproach": {
+      "title": "Linear Search",
+      "time": "O(n)",
+      "space": "O(1)",
+      "description": "Iterate through items sequentially from index 0 until target matches or end of array is reached."
+    },
+    "optimizedApproach": {
+      "title": "Binary Search",
+      "time": "O(log n)",
+      "space": "O(1)",
+      "description": "Leverage sorted property by probing midpoint and discarding half the search space every step."
+    },
+    "explanation": "For a list of 1,000,000 elements, linear search takes up to 1,000,000 checks. Binary search requires at most 20 comparisons (log₂ 1,000,000 ≈ 19.93).",
+    "codeExample": "// Binary Search: O(log n) Time, O(1) Space\nfunction binarySearch(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left <= right) {\n    const mid = Math.floor(left + (right - left) / 2);\n    if (arr[mid] === target) return mid;\n    if (arr[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}"
+  },
+  {
+    "name": "Longest Substring Without Repeating Characters",
+    "category": "Sliding Window & Hash Sets",
+    "difficulty": "Medium",
+    "currentApproach": {
+      "title": "All Substrings Check (Brute Force)",
+      "time": "O(n³)",
+      "space": "O(min(n, m))",
+      "description": "Generate all possible substrings (O(n²)) and verify distinct characters for each substring (O(n))."
+    },
+    "optimizedApproach": {
+      "title": "Sliding Window with Hash Map",
+      "time": "O(n)",
+      "space": "O(min(n, m))",
+      "description": "Maintain a sliding window [start...end]. When a repeat character is seen, slide start pointer past its previous occurrence."
+    },
+    "explanation": "The sliding window pattern processes each character at most twice (once entering the window, once exiting), turning a cubic O(n³) brute force into smooth linear O(n).",
+    "codeExample": "// Sliding Window: O(n) Time, O(k) Space\nfunction lengthOfLongestSubstring(s) {\n  const charMap = new Map();\n  let maxLen = 0, start = 0;\n  for (let end = 0; end < s.length; end++) {\n    const char = s[end];\n    if (charMap.has(char) && charMap.get(char) >= start) {\n      start = charMap.get(char) + 1;\n    }\n    charMap.set(char, end);\n    maxLen = Math.max(maxLen, end - start + 1);\n  }\n  return maxLen;\n}"
+  }
+]

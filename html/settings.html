@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Settings - AI Code Reviewer</title>
     <meta name="description" content="Configure AI Code Reviewer settings, GitHub integrations, and mentor analysis preferences." />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
   </head>
   <body>
     <div class="app-container">
@@ -211,11 +211,47 @@
               </div>
             </div>
           </div>
+
+          <!-- Section 4: Spring Boot REST API Endpoint -->
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Spring Boot REST Backend API</h2>
+                <div class="card-subtitle">Architecture: Frontend → Spring Boot REST API → Gemini AI</div>
+              </div>
+              <span class="badge" id="apiStatusBadge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                Local / Fallback Mode
+              </span>
+            </div>
+
+            <div class="card-body">
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                  <label class="form-label" for="settingApiBaseUrl">Backend Base URL</label>
+                  <div style="display: flex; gap: 10px; max-width: 600px;">
+                    <input
+                      type="text"
+                      id="settingApiBaseUrl"
+                      class="form-control"
+                      placeholder="http://localhost:8080"
+                      value="http://localhost:8080"
+                    />
+                    <button type="button" class="btn btn-secondary" id="testApiConnectionBtn">
+                      Test Connection
+                    </button>
+                  </div>
+                  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">
+                    Defaults to Spring Boot local dev server (<code>http://localhost:8080</code>). When offline, the frontend seamlessly uses local fallback datasets.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
       </div>
     </div>
 
-    <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/settings.js"></script>
+    <script type="module" src="../js/app.js"></script>
+    <script type="module" src="../js/pages/settings.js"></script>
   </body>
 </html>

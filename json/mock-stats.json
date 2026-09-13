@@ -1,0 +1,19 @@
+{
+  "totalReviews": 48,
+  "averageCodeQuality": 88,
+  "bugsDetected": 14,
+  "securityIssues": 4,
+  "performanceIssues": 12,
+  "mostReviewedLanguage": "Java",
+  "activeRepositories": 8,
+  "linesReviewed": "142.8k",
+  "codeHealth": 87,
+  "healthStatusText": "Good Code Health",
+  "averageComplexity": "O(n log n)",
+  "complexityTrends": [
+    { "period": "Week 1", "linear": 18, "quadratic": 8, "logarithmic": 12 },
+    { "period": "Week 2", "linear": 22, "quadratic": 6, "logarithmic": 15 },
+    { "period": "Week 3", "linear": 25, "quadratic": 5, "logarithmic": 17 },
+    { "period": "Week 4", "linear": 29, "quadratic": 4, "logarithmic": 19 }
+  ]
+}

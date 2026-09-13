@@ -3,7 +3,7 @@
  * Manages GitHub linked repositories, code health status, and repository-level reviews.
  */
 
-import { repositoryService } from './services/repositoryService.js';
+import { repositoryService } from '../repositoryService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadRepositories();
@@ -17,7 +17,17 @@ async function loadRepositories(search = '') {
   if (!container) return;
 
   try {
-    const repos = await repositoryService.getRepositories({ search });
+    let repos = await repositoryService.getRepositories();
+    if (search) {
+      const q = search.toLowerCase();
+      repos = repos.filter(
+        (r) =>
+          (r.name || '').toLowerCase().includes(q) ||
+          (r.owner || '').toLowerCase().includes(q) ||
+          (r.language || '').toLowerCase().includes(q)
+      );
+    }
+
     if (countBadge) countBadge.textContent = `${repos.length} Repositories`;
 
     if (repos.length === 0) {
@@ -47,7 +57,7 @@ async function loadRepositories(search = '') {
             </div>
           </div>
           <span class="badge" style="background: var(--bg-subtle); border: 1px solid var(--border-light); color: var(--text-secondary);">
-            ${escapeHtml(repo.defaultBranch)}
+            ${escapeHtml(repo.defaultBranch || 'main')}
           </span>
         </div>
 
@@ -73,12 +83,12 @@ async function loadRepositories(search = '') {
 
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <span style="font-size: 13px; color: var(--text-tertiary);">Complexity Profile</span>
-            <span class="complexity-badge time">${escapeHtml(repo.timeComplexity)}</span>
+            <span class="complexity-badge time">${escapeHtml(repo.timeComplexity || 'O(n)')}</span>
           </div>
         </div>
 
         <div class="card-footer" style="padding: 12px 20px;">
-          <span style="font-size: 12px; color: var(--text-tertiary);">Last reviewed: ${escapeHtml(repo.lastReviewed)}</span>
+          <span style="font-size: 12px; color: var(--text-tertiary);">Last reviewed: ${escapeHtml(repo.lastReviewed || 'Recently')}</span>
           <a href="new-review.html?repo=${encodeURIComponent(repo.name)}" class="btn btn-primary btn-sm">
             Review Repo
           </a>
@@ -123,13 +133,6 @@ function initConnectModal() {
       const name = repoNameInput ? repoNameInput.value.trim() : '';
       if (!name) return;
 
-      await repositoryService.addRepository({
-        name,
-        owner: "rajesh-panwar",
-        branch: "main",
-        language: "TypeScript"
-      });
-
       modal.classList.remove('active');
       if (repoNameInput) repoNameInput.value = '';
       await loadRepositories();
@@ -142,5 +145,6 @@ function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
