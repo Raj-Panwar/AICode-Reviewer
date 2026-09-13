@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Review History - AI Code Reviewer</title>
+    <meta name="description" content="Browse historical AI code reviews, search by repository, filter by complexity and quality score." />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- App Sidebar -->
+      <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand-icon">⚡</div>
+          <div class="sidebar-brand-title">AI Code Reviewer</div>
+          <span class="sidebar-brand-badge">v1.0</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section-title">Overview</div>
+          <a href="dashboard.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="new-review.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            <span>New Review</span>
+          </a>
+
+          <div class="nav-section-title">Analysis & Code</div>
+          <a href="reviews.html" class="nav-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Reviews</span>
+            <span class="nav-badge" id="reviewCountBadge">48</span>
+          </a>
+          <a href="repositories.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/></svg>
+            <span>Repositories</span>
+            <span class="nav-badge">6</span>
+          </a>
+          <a href="complexity.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <span>Complexity Analysis</span>
+          </a>
+
+          <div class="nav-section-title">System</div>
+          <a href="settings.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-profile-snippet">
+            <div class="user-avatar">RP</div>
+            <div class="user-info">
+              <div class="user-name">Rajesh Panwar</div>
+              <div class="user-role">Staff Engineer</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Layout -->
+      <div class="app-main">
+        <header class="app-topbar">
+          <div class="topbar-left">
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" class="search-input" id="globalSearchInput" placeholder="Search reviews, repos, algorithms..." />
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <a href="new-review.html" class="btn btn-primary btn-sm">+ New Review</a>
+            <div class="user-avatar" style="width: 34px; height: 34px; font-size: 12px;">RP</div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header">
+            <div class="page-title-group">
+              <h1>Review History</h1>
+              <p>Audit trail of all automated and on-demand code analysis reports with complexity metrics.</p>
+            </div>
+            <div class="page-actions">
+              <a href="new-review.html" class="btn btn-primary">
+                + Run New Review
+              </a>
+            </div>
+          </div>
+
+          <!-- Filters Card -->
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-body" style="padding: 16px 20px;">
+              <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 12px; flex: 1; min-width: 260px;">
+                  <input
+                    type="text"
+                    id="reviewsSearchInput"
+                    class="form-control"
+                    placeholder="Search by project, repo, file, or language..."
+                    style="max-width: 380px;"
+                  />
+
+                  <select id="reviewsLangFilter" class="form-control" style="width: auto;">
+                    <option value="All">All Languages</option>
+                    <option value="TypeScript">TypeScript</option>
+                    <option value="Java">Java</option>
+                    <option value="Python">Python</option>
+                    <option value="Go">Go</option>
+                    <option value="Rust">Rust</option>
+                  </select>
+
+                  <select id="reviewsStatusFilter" class="form-control" style="width: auto;">
+                    <option value="All">All Statuses</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Attention Needed">Attention Needed</option>
+                  </select>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; color: var(--text-tertiary);">Sort by:</span>
+                  <select id="reviewsSortSelect" class="form-control" style="width: auto;">
+                    <option value="date-desc">Newest First</option>
+                    <option value="score-desc">Highest Quality Score</option>
+                    <option value="score-asc">Lowest Quality Score</option>
+                    <option value="issues-desc">Most Issues</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Table Card -->
+          <div class="card">
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Project & File</th>
+                    <th>Repository</th>
+                    <th>Language</th>
+                    <th>Date</th>
+                    <th>Code Quality</th>
+                    <th>Time Complexity</th>
+                    <th>Space Complexity</th>
+                    <th>Issues</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                  <!-- Injected by js/reviews.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/reviews.js"></script>
+  </body>
+</html>

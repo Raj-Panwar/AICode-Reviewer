@@ -1,6 +1,6 @@
 {
-  "name": "Hello World",
-  "description": "A simple welcome web application displaying Hello World.",
+  "name": "AI Code Reviewer",
+  "description": "An AI-powered code review and complexity analysis tool providing mentor-style guidance, security checks, and optimization insights.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

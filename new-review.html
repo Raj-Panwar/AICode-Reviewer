@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Review - AI Code Reviewer</title>
+    <meta name="description" content="Submit source code for AI-powered review, algorithmic complexity calculation, and security defect analysis." />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- App Sidebar -->
+      <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand-icon">⚡</div>
+          <div class="sidebar-brand-title">AI Code Reviewer</div>
+          <span class="sidebar-brand-badge">v1.0</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section-title">Overview</div>
+          <a href="dashboard.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="new-review.html" class="nav-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            <span>New Review</span>
+          </a>
+
+          <div class="nav-section-title">Analysis & Code</div>
+          <a href="reviews.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Reviews</span>
+            <span class="nav-badge">48</span>
+          </a>
+          <a href="repositories.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/></svg>
+            <span>Repositories</span>
+            <span class="nav-badge">6</span>
+          </a>
+          <a href="complexity.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <span>Complexity Analysis</span>
+          </a>
+
+          <div class="nav-section-title">System</div>
+          <a href="settings.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-profile-snippet">
+            <div class="user-avatar">RP</div>
+            <div class="user-info">
+              <div class="user-name">Rajesh Panwar</div>
+              <div class="user-role">Staff Engineer</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main App Content -->
+      <div class="app-main">
+        <header class="app-topbar">
+          <div class="topbar-left">
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" class="search-input" id="globalSearchInput" placeholder="Search reviews, repos, algorithms..." />
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <div class="user-avatar" style="width: 34px; height: 34px; font-size: 12px;">RP</div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header">
+            <div class="page-title-group">
+              <h1>Submit Code for AI Review</h1>
+              <p>Analyze algorithms, detect vulnerabilities, calculate Time & Space complexity, and receive mentor-style fixes.</p>
+            </div>
+          </div>
+
+          <!-- Submission Methods Tabs -->
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+              <div class="tabs-nav" style="margin-bottom: 0; width: 100%;">
+                <button type="button" class="tab-btn active" data-tab="tabPaste">
+                  <span>📝</span> Method 1: Paste Code
+                </button>
+                <button type="button" class="tab-btn" data-tab="tabUpload">
+                  <span>📁</span> Method 2: Upload Files
+                </button>
+                <button type="button" class="tab-btn" data-tab="tabGitHub">
+                  <span>🐙</span> Method 3: GitHub Repository
+                </button>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <!-- Method 1: Paste Code -->
+              <div class="tab-content active" id="tabPaste">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                  <div style="display: flex; gap: 16px; flex: 1; min-width: 280px;">
+                    <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                      <label class="form-label" for="pasteFileName">File Name</label>
+                      <input type="text" id="pasteFileName" class="form-control" value="OrderProcessor.ts" placeholder="e.g. Solution.java, Service.ts" />
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                      <label class="form-label" for="pasteLanguage">Language</label>
+                      <select id="pasteLanguage" class="form-control">
+                        <option value="TypeScript">TypeScript</option>
+                        <option value="Java">Java</option>
+                        <option value="Python">Python</option>
+                        <option value="Go">Go</option>
+                        <option value="Rust">Rust</option>
+                        <option value="C++">C++</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0; min-width: 220px;">
+                    <label class="form-label" for="samplePresetSelect">Load Sample Problem</label>
+                    <select id="samplePresetSelect" class="form-control" style="background: var(--teal-50); border-color: var(--teal-100); color: var(--teal-700); font-weight: 600;">
+                      <option value="orderProcessor">OrderProcessor (Nested Loop & Null Check)</option>
+                      <option value="twoSum">Two Sum (Brute Force O(n²))</option>
+                      <option value="jwtVerifier">JWT Signature Verifier (Go)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="pasteCodeArea">Source Code</label>
+                  <textarea id="pasteCodeArea" class="form-control" placeholder="// Paste source code here..." rows="12">import { Order, OrderItem, DiscountRule, CalculationResult } from '../types';
+
+export class OrderProcessor {
+  private taxRate: number = 0.0825;
+
+  public calculateTotal(order: Order, discounts: DiscountRule[]): CalculationResult {
+    let subtotal = 0;
+    let totalDiscount = 0;
+
+    for (const item of order.items) {
+      subtotal += item.price * item.quantity;
+    }
+
+    // LINE 24: Direct property access without null safety check
+    const userTier = order.customer.tier.toLowerCase();
+
+    // LINE 42: O(n²) nested loop bottleneck
+    for (const item of order.items) {
+      for (const discount of discounts) {
+        if (discount.applicableSku === item.sku && discount.active) {
+          totalDiscount += (item.price * discount.percentage) / 100;
+        }
+      }
+    }
+
+    const rawTax = (subtotal - totalDiscount) * this.taxRate;
+    return {
+      subtotal,
+      discount: totalDiscount,
+      tax: Math.round(rawTax * 100) / 100,
+      total: Math.round((subtotal - totalDiscount + rawTax) * 100) / 100
+    };
+  }
+}</textarea>
+                </div>
+              </div>
+
+              <!-- Method 2: Upload Files -->
+              <div class="tab-content" id="tabUpload">
+                <div class="dropzone" id="uploadDropzone">
+                  <div class="dropzone-icon">☁️</div>
+                  <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                    Drag and drop source files here
+                  </h3>
+                  <p style="font-size: 13px; color: var(--text-tertiary); margin-bottom: 12px;">
+                    Supports .ts, .js, .java, .py, .go, .rs, .cpp (Max 15MB)
+                  </p>
+                  <button type="button" class="btn btn-secondary btn-sm">Browse Files</button>
+                  <input type="file" id="fileUploadInput" multiple style="display: none;" />
+                </div>
+
+                <div id="uploadedFilesList" style="margin-top: 16px;">
+                  <!-- Injected by js/new-review.js -->
+                </div>
+              </div>
+
+              <!-- Method 3: GitHub Repository -->
+              <div class="tab-content" id="tabGitHub">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 18px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="githubRepoSelect">Select Repository</label>
+                    <select id="githubRepoSelect" class="form-control">
+                      <!-- Injected with mock repos -->
+                    </select>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="githubBranchSelect">Select Branch</label>
+                    <select id="githubBranchSelect" class="form-control">
+                      <option value="main">main (default)</option>
+                      <option value="develop">develop</option>
+                      <option value="feature/optimize-order-processing">feature/optimize-order-processing</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="githubFileSelect">Target File or Subtree</label>
+                    <input type="text" id="githubFileSelect" class="form-control" value="src/services/OrderProcessor.ts" />
+                  </div>
+                </div>
+
+                <div style="padding: 14px; background: var(--bg-subtle); border-radius: var(--radius-md); font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                  <span style="color: var(--teal-600); font-weight: bold;">✓</span>
+                  <span>Repository verified and connected via GitHub App (org-fintech).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review Configuration & Analysis Checkboxes -->
+          <div class="card" style="margin-bottom: 28px;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Review Configuration</h2>
+                <div class="card-subtitle">Choose which automated AI inspection gates to apply to this code</div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Bug Detection</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Logical flaws, off-by-one errors, null dereferencing.</div>
+                  </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Security Analysis</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Sanitation, OWASP top 10, credential leakage.</div>
+                  </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Code Quality & Maintainability</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Naming conventions, cognitive depth, clean architecture.</div>
+                  </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Complexity Analysis (Big-O)</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Calculates Time and Space complexity, detects nested bottlenecks.</div>
+                  </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Performance & Memory Optimization</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Garbage collection thrash, unnecessary heap copying.</div>
+                  </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 3px; accent-color: var(--teal-600);" />
+                  <div>
+                    <strong style="font-size: 14px;">Best Practice Mentor Guidance</strong>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Suggests clean before/after code diffs with trade-off rationale.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="card-footer" style="justify-content: flex-end; gap: 14px;">
+              <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+              <button type="button" class="btn btn-primary btn-lg" id="startReviewBtn">
+                ⚡ Start AI Review
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Multi-Stage Analysis Loading Modal (Transparent progress sequence) -->
+    <div class="modal-backdrop" id="analysisModal">
+      <div class="analysis-modal-box">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          <div class="sidebar-brand-icon" style="width: 32px; height: 32px;">⚡</div>
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">AI Mentor Review in Progress</h2>
+        </div>
+        <p style="font-size: 13px; color: var(--text-secondary);" id="currentStepText">
+          Reading source code & parsing AST syntax tokens...
+        </p>
+
+        <!-- Progress Bar -->
+        <div class="analysis-progress-bar">
+          <div class="analysis-progress-fill" id="analysisProgressFill" style="width: 15%;"></div>
+        </div>
+
+        <!-- Multi-Stage Steps Sequence -->
+        <div class="analysis-steps-list">
+          <div class="analysis-step-item in-progress" data-step="1">
+            <div class="step-indicator">…</div>
+            <span>1. Reading source code & building AST</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="2">
+            <div class="step-indicator">2</div>
+            <span>2. Analyzing structure & control flow graphs</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="3">
+            <div class="step-indicator">3</div>
+            <span>3. Checking for bugs & null safety edge cases</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="4">
+            <div class="step-indicator">4</div>
+            <span>4. Analyzing security vulnerabilities & input vectors</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="5">
+            <div class="step-indicator">5</div>
+            <span>5. Calculating Time & Space complexity metrics</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="6">
+            <div class="step-indicator">6</div>
+            <span>6. Evaluating code quality & maintainability</span>
+          </div>
+          <div class="analysis-step-item pending" data-step="7">
+            <div class="step-indicator">7</div>
+            <span>7. Generating mentor recommendations & before/after fixes</span>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-tertiary); text-align: center;">
+          Applying senior mentor heuristics • Preparing interactive report
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/new-review.js"></script>
+  </body>
+</html>
