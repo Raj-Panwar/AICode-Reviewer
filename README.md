@@ -108,50 +108,50 @@ flowchart TD
     Start([User Opens AI Code Reviewer]) --> ChooseMethod{Choose Input Method}
 
     subgraph InputMethods [Input Workflows]
-        ChooseMethod -->|Method 1| WriteCode[Write / Paste Code in Editor]
-        ChooseMethod -->|Method 2| UploadFile[Drag & Drop / Select File]
-        ChooseMethod -->|Method 3| ConnectRepo[Browse Repository, Branch & File]
+        ChooseMethod -->|Method 1| WriteCode[Write or Paste Code in Editor]
+        ChooseMethod -->|Method 2| UploadFile[Drag and Drop or Select File]
+        ChooseMethod -->|Method 3| ConnectRepo[Browse Repository, Branch and File]
     end
 
-    WriteCode --> SelectLang[Select Language & Set Filename]
-    UploadFile --> AutoDetect[Auto-detect Extension & Extract Code]
+    WriteCode --> SelectLang[Select Language and Set Filename]
+    UploadFile --> AutoDetect[Auto Detect Extension and Extract Code]
     ConnectRepo --> SelectRepoFile[Preview Source Code from Repo]
 
-    SelectLang --> ValidateInput{Validate Code & Language}
+    SelectLang --> ValidateInput{Validate Code and Language}
     AutoDetect --> ValidateInput
     SelectRepoFile --> ValidateInput
 
-    ValidateInput -->|Empty / Invalid| ShowError[Display Actionable Error Alert]
+    ValidateInput -->|Empty or Invalid| ShowError[Display Actionable Error Alert]
     ShowError --> ChooseMethod
 
     ValidateInput -->|Valid| TriggerModal[Open Multi-Stage Analysis Modal]
-    TriggerModal --> DispatchService[reviewService.runAnalysis Payload]
+    TriggerModal --> DispatchService[Dispatch reviewService runAnalysis]
 
-    subgraph ProcessingPipeline [Analysis Execution & API Mode Routing]
-        DispatchService --> CheckMode{Check API_MODE in apiClient}
-        CheckMode -->|API_MODE = 'mock' (Default)| MockRoute[mockApi.analyzeCode]
+    subgraph ProcessingPipeline [Analysis Execution and API Mode Routing]
+        DispatchService --> CheckMode{Check API Mode}
+        CheckMode -->|Mock mode - default| MockRoute[mockApi analyzeCode]
         MockRoute --> MockLatency[Simulate Latency 350ms]
         MockLatency --> MockGen[Synthesize Language-Specific Review]
         MockGen --> ReturnResult[Return Standard Review Payload]
 
-        CheckMode -->|API_MODE = 'real'| RealRoute[POST http://localhost:8080/api/reviews/analyze]
+        CheckMode -->|Real API mode| RealRoute[POST reviews analyze]
         RealRoute --> SpringBootBackend[Spring Boot REST Backend]
         SpringBootBackend --> ReturnResult
 
         ReturnResult --> StoreSession[Store Review in sessionStorage]
     end
 
-    StoreSession --> NavigateReview[Redirect to review.html?id=...]
+    StoreSession --> NavigateReview[Redirect to Review Report]
 
     subgraph ReviewInspection [Interactive Inspection]
-        NavigateReview --> ViewScore[View Overall Score & Health Banner]
-        NavigateReview --> FilterIssues[Filter Issues by Severity & Category]
+        NavigateReview --> ViewScore[View Overall Score and Health Banner]
+        NavigateReview --> FilterIssues[Filter Issues by Severity and Category]
         FilterIssues --> HighlightLine[Highlight Source Code Line in Viewer]
-        NavigateReview --> InspectComplexity[Inspect Time & Space Complexity]
+        NavigateReview --> InspectComplexity[Inspect Time and Space Complexity]
         NavigateReview --> CopyFix[Copy Optimized Solution to Clipboard]
     end
 
-    ReviewInspection --> SaveToHistory[Access Review in History & Dashboard]
+    ReviewInspection --> SaveToHistory[Access Review in History and Dashboard]
 ```
 
 ---
@@ -164,11 +164,11 @@ The AI Code Reviewer is designed around an enterprise-grade, decoupled tier arch
 flowchart TB
     subgraph ClientTier [Frontend Client Architecture - Implemented]
         Browser[User Web Browser]
-        HTMLViews[HTML5 Views - /html/*.html]
-        Controllers[Page Controllers - /js/pages/*.js]
-        State[Language & Filter State - js/languageState.js]
-        DomainServices[Domain Services - reviewService.js & repositoryService.js]
-        ApiClient[Unified API Client - js/api.js]
+        HTMLViews[HTML5 Views]
+        Controllers[Page Controllers]
+        State[Language and Filter State]
+        DomainServices[Domain Services - review and repository]
+        ApiClient[Unified API Client - api.js]
         
         Browser --> HTMLViews
         HTMLViews --> Controllers
@@ -177,27 +177,27 @@ flowchart TB
         DomainServices --> ApiClient
     end
 
-    subgraph MockTier [Default Mode: Pure Client-Side Mock Layer - Implemented]
-        MockRouter[Mock API Router - js/mockApi.js]
+    subgraph MockTier [Default Mode: Client-Side Mock Layer - Implemented]
+        MockRouter[Mock API Router - mockApi.js]
         LatencySim[Latency Simulator 350ms]
         LanguageSynthesizer[Context-Aware Review Synthesizer - 9 Languages]
-        JSONFixtures[(Static Mock Datasets - /json/*.json)]
+        JSONFixtures[(Static Mock Datasets)]
 
-        ApiClient -->|When API_MODE = 'mock' (Default)| MockRouter
+        ApiClient -->|Mock mode - default| MockRouter
         MockRouter --> LatencySim
         MockRouter --> LanguageSynthesizer
         MockRouter --> JSONFixtures
     end
 
     subgraph BackendTier [Future Real Mode: Spring Boot Backend - Planned]
-        RestControllers[REST Controllers - /api/reviews, /api/dashboard]
-        SecurityFilter[Security & CORS Filter]
-        ServiceLayer[ReviewService & ComplexityService]
+        RestControllers[REST Controllers - reviews and dashboard]
+        SecurityFilter[Security and CORS Filter]
+        ServiceLayer[ReviewService and ComplexityService]
         GeminiProxy[GeminiService Orchestrator]
-        StaticAnalyzer[Deterministic AST / Static Analysis Pass]
+        StaticAnalyzer[Deterministic AST and Static Analysis Pass]
         RepoLayer[Spring Data JPA Repositories]
 
-        ApiClient -->|When API_MODE = 'real'| RestControllers
+        ApiClient -->|Real API mode| RestControllers
         RestControllers --> SecurityFilter
         SecurityFilter --> ServiceLayer
         ServiceLayer --> StaticAnalyzer
@@ -207,12 +207,12 @@ flowchart TB
 
     subgraph ExternalServices [External Integrations - Planned]
         GeminiAPI[Google Gemini 2.5 API - Server-to-Server]
-        GitHubAPI[GitHub REST & GraphQL API]
-        Database[(Relational Database - PostgreSQL / MySQL)]
+        GitHubAPI[GitHub REST and GraphQL API]
+        Database[(Relational Database - PostgreSQL or MySQL)]
 
-        GeminiProxy -->|Secure SDK / Bearer Token| GeminiAPI
+        GeminiProxy -->|Secure SDK Bearer Token| GeminiAPI
         ServiceLayer -->|OAuth2 App Tokens| GitHubAPI
-        RepoLayer -->|Hibernate / JDBC| Database
+        RepoLayer -->|Hibernate and JDBC| Database
     end
 
     classDef implemented fill:#0f766e,stroke:#115e59,color:#ffffff;
@@ -330,33 +330,33 @@ let API_BASE_URL = localStorage.getItem('api_base_url') || 'http://localhost:808
 flowchart TD
     subgraph ViewLayer [View Layer]
         HTML[HTML View Templates]
-        DOMEvents[User DOM Events / Clicks / Typing]
+        DOMEvents[User DOM Events - Clicks and Typing]
         HTML --> DOMEvents
     end
 
-    subgraph ControllerLayer [Controller Layer - js/pages/*.js]
+    subgraph ControllerLayer [Controller Layer - js pages]
         PageController[Page Specific Controller]
         DOMEvents --> PageController
     end
 
-    subgraph StateLayer [State & Core Layer]
+    subgraph StateLayer [State and Core Layer]
         LangState[Language State Singleton - languageState.js]
-        AppShell[Shell & Navigation Controller - app.js]
+        AppShell[Shell and Navigation Controller - app.js]
         PageController <--> LangState
         AppShell --> LangState
     end
 
-    subgraph ServiceLayer [Business Logic & Domain Services]
+    subgraph ServiceLayer [Business Logic and Domain Services]
         RevService[reviewService.js]
         RepoService[repositoryService.js]
         PageController --> RevService
         PageController --> RepoService
     end
 
-    subgraph DataAccessLayer [Data Access & Transport Layer]
-        ApiClient[apiClient - js/api.js]
+    subgraph DataAccessLayer [Data Access and Transport Layer]
+        ApiClient[apiClient - js api]
         SessionStore[(sessionStorage Persistence)]
-        JSONFixtures[(Static Mock JSON Files - /json/*.json)]
+        JSONFixtures[(Static Mock JSON Files)]
 
         RevService --> ApiClient
         RevService <--> SessionStore
@@ -380,28 +380,28 @@ The **New Review** screen (`html/new-review.html`, controlled by `js/pages/new-r
 ```mermaid
 flowchart TD
     subgraph TabSelection [Tab Selection Interface]
-        Tab1[Tab 1: Write Code]
-        Tab2[Tab 2: Add File]
-        Tab3[Tab 3: Connect Repository]
+        Tab1[Method 1 - Write Code]
+        Tab2[Method 2 - Add File]
+        Tab3[Method 3 - Connect Repository]
     end
 
     subgraph WriteCodeFlow [Method 1: Write Code]
         Tab1 --> CodeEditor[Monospace Code Editor]
         LangDropdown[Language Dropdown] --> CodeEditor
-        CodeEditor --> EditorInput[User Types / Pastes Code]
-        EditorInput --> SyncEditorState[Update Code Buffer & Filename]
+        CodeEditor --> EditorInput[User Types or Pastes Code]
+        EditorInput --> SyncEditorState[Update Code Buffer and Filename]
     end
 
     subgraph AddFileFlow [Method 2: Add File]
-        Tab2 --> Dropzone[Drag & Drop / File Input]
+        Tab2 --> Dropzone[Drag and Drop File Input]
         Dropzone --> FileRead[FileReader API reads text content]
-        FileRead --> DetectExt[Auto-Detect Extension & Map Language]
-        DetectExt --> UpdateLangState[Sync languageState & Display File Details]
+        FileRead --> DetectExt[Auto-Detect Extension and Map Language]
+        DetectExt --> UpdateLangState[Sync languageState and Display File Details]
     end
 
     subgraph ConnectRepoFlow [Method 3: Connect Repository]
         Tab3 --> RepoSelect[Select Repository from List]
-        RepoSelect --> BranchSelect[Select Branch: main / develop]
+        RepoSelect --> BranchSelect[Select Branch - main or develop]
         BranchSelect --> FileTreeSelect[Select File from Repo Tree]
         FileTreeSelect --> FetchRepoFile[Load File Content into Preview]
     end
@@ -410,12 +410,12 @@ flowchart TD
     UpdateLangState --> PreparePayload
     FetchRepoFile --> PreparePayload
 
-    subgraph Submission [Validation & Submission]
-        PreparePayload --> ValidationCheck{Code Length > 0?}
+    subgraph Submission [Validation and Submission]
+        PreparePayload --> ValidationCheck{Has Valid Code}
         ValidationCheck -->|No| ShowAlert[Display Validation Error]
         ValidationCheck -->|Yes| ShowProgressModal[Display Multi-Stage Progress Modal]
-        ShowProgressModal --> SendReview[Call reviewService.analyzeCode]
-        SendReview --> Redirect[Redirect to review.html with Review ID]
+        ShowProgressModal --> SendReview[Call reviewService runAnalysis]
+        SendReview --> Redirect[Redirect to Review Results Page]
     end
 ```
 
@@ -430,37 +430,37 @@ sequenceDiagram
     autonumber
     actor User as Developer
     participant UI as New Review Page
-    participant Service as reviewService.js
-    participant API as api.js
+    participant Service as reviewService
+    participant API as apiClient
     participant Backend as Spring Boot Backend
-    participant Gemini as Gemini 2.5 AI Engine
-    participant ResultPage as review.html
+    participant Gemini as Gemini AI Engine
+    participant ResultPage as Review Report Page
 
-    User->>UI: Submit Code (Editor, File, or Repo)
-    UI->>UI: Validate Input (Non-empty, valid language)
+    User->>UI: Submit Code from Editor, File, or Repo
+    UI->>UI: Validate Input for Non-empty Code and Language
     UI->>UI: Open Multi-Stage Analysis Modal
-    UI->>Service: analyzeCode(reviewPayload)
-    Service->>API: post('/api/reviews/analyze', payload)
+    UI->>Service: analyzeCode with Review Payload
+    Service->>API: POST reviews analyze request
 
     alt Backend Available
-        API->>Backend: HTTP POST /api/reviews/analyze
-        Backend->>Backend: Deterministic Validation & Security Check
-        Backend->>Gemini: Prompt with Code & Structured JSON Schema
+        API->>Backend: HTTP POST reviews analyze
+        Backend->>Backend: Deterministic Validation and Security Check
+        Backend->>Gemini: Prompt with Code and Structured JSON Schema
         Gemini-->>Backend: Return Structured Review JSON
-        Backend->>Backend: Normalize Metrics & Sanitize Markdown
-        Backend-->>API: 200 OK (Normalized Review Payload)
+        Backend->>Backend: Normalize Metrics and Sanitize Markdown
+        Backend-->>API: 200 OK Normalized Review Payload
         API-->>Service: Review Result Data
-    else Backend Unavailable / Standalone Mode
-        API-->>Service: Network Error / Offline
+    else Backend Unavailable or Standalone Mode
+        API-->>Service: Network Error or Offline
         Service->>Service: Generate Realistic Mock Review with Complexity Metrics
     end
 
-    Service->>Service: Cache in sessionStorage('active_review_...')
+    Service->>Service: Cache in sessionStorage
     Service-->>UI: Resolution with Review ID
-    UI->>ResultPage: Redirect window.location = 'review.html?id=...'
-    ResultPage->>Service: getReviewById(id)
-    Service-->>ResultPage: Return Cached / Fetched Review Data
-    ResultPage->>ResultPage: Render Health Score, Issues, Complexity, Code Viewer & Refactor
+    UI->>ResultPage: Redirect to Review Report
+    ResultPage->>Service: Request Review by ID
+    Service-->>ResultPage: Return Cached or Fetched Review Data
+    ResultPage->>ResultPage: Render Health Score, Issues, Complexity, and Code Viewer
     ResultPage-->>User: Display Interactive Diagnostic Report
 ```
 
@@ -486,30 +486,30 @@ The platform treats asymptotic runtime and memory consumption as first-class eng
 
 ```mermaid
 flowchart TD
-    InputCode[Source Code Input] --> ParseStructure[Analyze Control Flow & Loops]
+    InputCode[Source Code Input] --> ParseStructure[Analyze Control Flow and Loops]
 
     subgraph StructuralParsing [Complexity Inspection Pass]
-        ParseStructure --> DetectLoops[Identify Loops & Nesting Depth]
-        ParseStructure --> DetectRecursion[Identify Recursive Calls & Base Cases]
+        ParseStructure --> DetectLoops[Identify Loops and Nesting Depth]
+        ParseStructure --> DetectRecursion[Identify Recursive Calls and Base Cases]
         ParseStructure --> DetectDataStructures[Identify Auxiliary Memory Allocations]
     end
 
     subgraph AsymptoticEstimation [Asymptotic Formulation]
-        DetectLoops --> TimeCalc[Calculate Asymptotic Time Complexity - e.g. O n²]
+        DetectLoops --> TimeCalc[Calculate Asymptotic Time Complexity O n squared]
         DetectRecursion --> TimeCalc
-        DetectDataStructures --> SpaceCalc[Calculate Asymptotic Space Complexity - e.g. O 1]
+        DetectDataStructures --> SpaceCalc[Calculate Asymptotic Space Complexity O 1]
     end
 
     subgraph OptimizationEngine [Optimization Evaluation]
-        TimeCalc --> IdentifyBottleneck[Locate Primary Bottleneck - e.g. Line 28 Nested Loop]
+        TimeCalc --> IdentifyBottleneck[Locate Primary Bottleneck - Nested Loop]
         SpaceCalc --> IdentifyBottleneck
-        IdentifyBottleneck --> EvaluateFeasibility{Can it be optimized?}
-        EvaluateFeasibility -->|Yes| FormulateTradeoff[Formulate Trade-off: Use Hash Map to trade O n space for O 1 lookups]
+        IdentifyBottleneck --> EvaluateFeasibility{Optimization Possible}
+        EvaluateFeasibility -->|Yes| FormulateTradeoff[Formulate Trade-off - Use Hash Map to trade space for O 1 lookups]
         EvaluateFeasibility -->|Already Optimal| ConfirmOptimal[Verify Optimal Boundary]
     end
 
     FormulateTradeoff --> GenerateOptimized[Generate Optimized Code Implementation]
-    ConfirmOptimal --> DisplayMetrics[Render Complexity Cards & Visual Big-O Scale]
+    ConfirmOptimal --> DisplayMetrics[Render Complexity Cards and Visual Big-O Scale]
     GenerateOptimized --> DisplayMetrics
 ```
 
@@ -525,22 +525,22 @@ sequenceDiagram
     autonumber
     participant Browser as Frontend Client
     participant SpringBoot as Spring Boot API Gateway
-    participant GeminiSDK as Gemini 2.5 SDK (@google/genai)
+    participant GeminiSDK as Gemini 2.5 SDK
     participant GoogleCloud as Google Gemini API
 
     Note over Browser,GoogleCloud: Secure Backend Proxy Architecture
-    Browser->>SpringBoot: POST /api/reviews/analyze (Code + Language)
+    Browser->>SpringBoot: POST reviews analyze with Code and Language
     Note over Browser,SpringBoot: No API keys transmitted or stored in browser
 
-    SpringBoot->>SpringBoot: Authenticate Request & Apply Rate Limiter
-    SpringBoot->>SpringBoot: Construct System Prompt & Strict JSON Schema
-    SpringBoot->>GeminiSDK: Invoke generateContent(prompt, schema)
-    GeminiSDK->>GoogleCloud: HTTPS Request with Server Secret (GEMINI_API_KEY)
+    SpringBoot->>SpringBoot: Authenticate Request and Apply Rate Limiter
+    SpringBoot->>SpringBoot: Construct System Prompt and Strict JSON Schema
+    SpringBoot->>GeminiSDK: Invoke generateContent with structured schema
+    GeminiSDK->>GoogleCloud: HTTPS Request with Server Secret GEMINI_API_KEY
     GoogleCloud-->>GeminiSDK: Structured JSON AI Response
     GeminiSDK-->>SpringBoot: Return Parsed Review Object
 
-    SpringBoot->>SpringBoot: Validate Response Schema & Sanitize Output
-    SpringBoot-->>Browser: 200 OK (Clean Review JSON Response)
+    SpringBoot->>SpringBoot: Validate Response Schema and Sanitize Output
+    SpringBoot-->>Browser: 200 OK Clean Review JSON Response
 ```
 
 ### Separation of Responsibilities
@@ -557,26 +557,26 @@ The planned Java 17+ Spring Boot service will follow enterprise layered architec
 ```mermaid
 classDiagram
     class ReviewController {
-        +analyzeCode(ReviewRequestDTO) ResponseEntity~ReviewResponseDTO~
-        +getReviewById(String) ResponseEntity~ReviewResponseDTO~
-        +listRecentReviews(int, int) ResponseEntity~Page~
+        +analyzeCode(ReviewRequestDTO request) ReviewResponseDTO
+        +getReviewById(String id) ReviewResponseDTO
+        +listRecentReviews(int page, int size) List
     }
 
     class DashboardController {
-        +getDashboardStats() ResponseEntity~DashboardStatsDTO~
+        +getDashboardStats() DashboardStatsDTO
     }
 
     class RepositoryController {
-        +listRepositories() ResponseEntity~List~
-        +syncRepository(String) ResponseEntity~RepoSyncDTO~
+        +listRepositories() List
+        +syncRepository(String id) RepoSyncDTO
     }
 
     class ReviewService {
         -GeminiService geminiService
         -StaticAnalysisService analysisService
         -ReviewRepository reviewRepository
-        +processReview(ReviewRequestDTO) ReviewResponseDTO
-        +fetchReview(String) ReviewResponseDTO
+        +processReview(ReviewRequestDTO request) ReviewResponseDTO
+        +fetchReview(String id) ReviewResponseDTO
     }
 
     class GeminiService {
@@ -590,9 +590,9 @@ classDiagram
     }
 
     class GlobalExceptionHandler {
-        +handleValidationException(MethodArgumentNotValidException) ErrorDTO
-        +handleTimeoutException(TimeoutException) ErrorDTO
-        +handleGeneralException(Exception) ErrorDTO
+        +handleValidationException(MethodArgumentNotValidException ex) ErrorDTO
+        +handleTimeoutException(TimeoutException ex) ErrorDTO
+        +handleGeneralException(Exception ex) ErrorDTO
     }
 
     ReviewController --> ReviewService
@@ -719,38 +719,38 @@ erDiagram
     }
 
     REVIEWS {
-        varchar_64 id PK
+        string id PK
         bigint user_id FK
         bigint repository_id FK
         string file_name
         string language
         int score
         string status
-        text summary
+        string summary
         string time_complexity
         string space_complexity
-        text complexity_explanation
-        text bottleneck
-        text optimized_code
+        string complexity_explanation
+        string bottleneck
+        string optimized_code
         timestamp created_at
     }
 
     ISSUES {
         bigint id PK
-        varchar_64 review_id FK
+        string review_id FK
         string severity
         string category
         int line_number
         string title
-        text description
-        text why_it_matters
-        text suggested_fix
+        string description
+        string why_it_matters
+        string suggested_fix
     }
 
     RECOMMENDATIONS {
         bigint id PK
-        varchar_64 review_id FK
-        text recommendation_text
+        string review_id FK
+        string recommendation_text
         int display_order
     }
 ```
@@ -765,19 +765,19 @@ The platform provides a simulated GitHub repository workspace designed for seaml
 flowchart TD
     subgraph CurrentImplementation [Current Frontend Implementation]
         MockRepos[(Mock Repositories JSON)] --> RepoPage[Repositories Management Page]
-        RepoPage --> ViewHealth[Inspect Health Scores & Issues]
+        RepoPage --> ViewHealth[Inspect Health Scores and Issues]
         RepoPage --> TriggerQuickReview[Trigger Quick File Review]
-        RepoPage --> ConnectNewModal[Connect Repo Modal - Form & Validation]
+        RepoPage --> ConnectNewModal[Connect Repo Modal - Form and Validation]
     end
 
-    subgraph PlannedRealIntegration [Planned Real GitHub OAuth & API Flow]
-        OAuthTrigger[User Clicks 'Connect with GitHub'] --> GitHubOAuth[GitHub OAuth2 Authorization Flow]
+    subgraph PlannedRealIntegration [Planned Real GitHub OAuth and API Flow]
+        OAuthTrigger[User Connects with GitHub] --> GitHubOAuth[GitHub OAuth2 Authorization Flow]
         GitHubOAuth --> ExchangeToken[Backend Exchanges Code for Access Token]
         ExchangeToken --> StoreToken[Encrypted Token Stored in Backend Database]
-        StoreToken --> FetchUserRepos[GET /user/repos - Fetch Repositories]
-        FetchUserRepos --> FetchBranches[GET /repos/:owner/:repo/branches]
-        FetchBranches --> FetchTree[GET /repos/:owner/:repo/git/trees/:sha]
-        FetchTree --> FetchBlob[GET /repos/:owner/:repo/contents/:path]
+        StoreToken --> FetchUserRepos[Fetch User Repositories]
+        FetchUserRepos --> FetchBranches[Fetch Repository Branches]
+        FetchBranches --> FetchTree[Fetch Git Commit Tree]
+        FetchTree --> FetchBlob[Fetch File Content Blob]
         FetchBlob --> PassToReviewPipeline[Deliver Source Code to Review Pipeline]
     end
 ```
@@ -802,13 +802,13 @@ flowchart LR
     end
 
     subgraph Transport [API Client]
-        HTTPPost[POST /api/reviews/analyze]
+        HTTPPost[POST reviews analyze]
         StateSync --> HTTPPost
     end
 
     subgraph BackendProcess [Spring Boot Backend]
-        RateLimit[Rate Limiting & Auth]
-        PromptEngine[Prompt & Schema Assembly]
+        RateLimit[Rate Limiting and Auth]
+        PromptEngine[Prompt and Schema Assembly]
         HTTPPost --> RateLimit
         RateLimit --> PromptEngine
     end
@@ -818,7 +818,7 @@ flowchart LR
         PromptEngine --> GeminiInference
     end
 
-    subgraph Persistence [Persistence & Formatting]
+    subgraph Persistence [Persistence and Formatting]
         Normalize[JSON Normalization]
         DBStore[(Save to Database)]
         GeminiInference --> Normalize
