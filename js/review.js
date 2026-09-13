@@ -50,10 +50,20 @@ function renderHeader(review) {
   }
 
   if (healthTitleEl) {
-    healthTitleEl.textContent = `${review.overallScore} / 100 — Good Code Health`;
+    const healthStatus = review.overallScore >= 85 ? 'Excellent Code Health' : (review.overallScore >= 75 ? 'Good Code Health' : 'Needs Optimization');
+    healthTitleEl.textContent = `${review.overallScore} / 100 — ${healthStatus}`;
   }
   if (healthDescEl) {
     healthDescEl.textContent = `Analyzed ${review.file}. Found ${review.issues ? review.issues.length : 0} items for review with algorithmic complexity optimization opportunities.`;
+  }
+
+  const scoreNumberEl = document.querySelector('.health-score-pill .score-number');
+  const scoreStatusEl = document.querySelector('.health-score-pill .score-text-status');
+  if (scoreNumberEl) {
+    scoreNumberEl.textContent = review.overallScore;
+  }
+  if (scoreStatusEl) {
+    scoreStatusEl.textContent = review.overallScore >= 80 ? 'Production Ready*' : 'Needs Attention';
   }
 }
 
@@ -85,54 +95,116 @@ function renderComplexitySection(complexity) {
   const expEl = document.getElementById('compExplanationText');
   const partsListEl = document.getElementById('compPartsList');
 
-  if (timeEl) timeEl.textContent = complexity.timeComplexity;
-  if (spaceEl) spaceEl.textContent = complexity.spaceComplexity;
-  if (bestEl) bestEl.textContent = complexity.timeBestCase || complexity.timeComplexity;
-  if (avgEl) avgEl.textContent = complexity.timeAverageCase || complexity.timeComplexity;
-  if (worstEl) worstEl.textContent = complexity.timeWorstCase || complexity.timeComplexity;
-  if (expEl) expEl.textContent = complexity.summaryExplanation;
+  const timeVal = complexity.time || complexity.timeComplexity || 'O(n)';
+  const spaceVal = complexity.space || complexity.spaceComplexity || 'O(1)';
 
-  if (partsListEl && complexity.contributingParts) {
-    partsListEl.innerHTML = complexity.contributingParts
-      .map(
-        (part) => `
+  if (timeEl) timeEl.textContent = timeVal;
+  if (spaceEl) spaceEl.textContent = spaceVal;
+  if (bestEl) bestEl.textContent = complexity.timeBestCase || (timeVal === 'O(n²)' ? 'O(n)' : timeVal);
+  if (avgEl) avgEl.textContent = complexity.timeAverageCase || timeVal;
+  if (worstEl) worstEl.textContent = complexity.timeWorstCase || timeVal;
+  if (expEl) expEl.textContent = complexity.timeExplanation || complexity.summaryExplanation || 'Algorithmic time complexity calculated from loop structures and abstract syntax tree tokens.';
+
+  if (partsListEl) {
+    if (complexity.contributingParts && complexity.contributingParts.length > 0) {
+      partsListEl.innerHTML = complexity.contributingParts
+        .map(
+          (part) => `
+          <li style="margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); display: flex; align-items: baseline; gap: 8px;">
+            <span class="badge badge-medium">Line ${part.line}</span>
+            <span>${escapeHtml(part.label)}</span>
+          </li>`
+        )
+        .join('');
+    } else if (complexity.bottleneckLine) {
+      partsListEl.innerHTML = `
         <li style="margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); display: flex; align-items: baseline; gap: 8px;">
-          <span class="badge badge-medium">Line ${part.line}</span>
-          <span>${escapeHtml(part.label)}</span>
-        </li>`
-      )
-      .join('');
+          <span class="badge badge-medium">Line ${complexity.bottleneckLine}</span>
+          <span>${escapeHtml(complexity.timeExplanation || 'Primary iteration bottleneck location')}</span>
+        </li>
+      `;
+    }
   }
 
   // Side-by-side comparison
   const compGrid = document.getElementById('complexityComparisonContainer');
-  if (compGrid && complexity.comparison) {
-    const comp = complexity.comparison;
-    compGrid.innerHTML = `
-      <div class="comparison-box current">
-        <div class="comparison-label">Current Implementation</div>
-        <div class="comparison-metrics">
-          <span class="complexity-badge time">Time: ${escapeHtml(comp.current.time)}</span>
-          <span class="complexity-badge space">Space: ${escapeHtml(comp.current.space)}</span>
-        </div>
-        <div class="comparison-desc">${escapeHtml(comp.current.description)}</div>
-      </div>
+  const tradeOffEl = document.getElementById('tradeoffExplanationText');
 
-      <div class="comparison-box optimized">
-        <div class="comparison-label">Suggested AI Optimization</div>
-        <div class="comparison-metrics">
-          <span class="complexity-badge time" style="background: #ecfdf5; color: #047857; border-color: #a7f3d0;">Time: ${escapeHtml(comp.optimized.time)}</span>
-          <span class="complexity-badge space" style="background: #f0fdfa; color: #0f766e; border-color: #99f6e4;">Space: ${escapeHtml(comp.optimized.space)}</span>
+  if (compGrid) {
+    if (complexity.comparison) {
+      const comp = complexity.comparison;
+      compGrid.innerHTML = `
+        <div class="comparison-box current">
+          <div class="comparison-label">Current Implementation</div>
+          <div class="comparison-metrics">
+            <span class="complexity-badge time">Time: ${escapeHtml(comp.current.time)}</span>
+            <span class="complexity-badge space">Space: ${escapeHtml(comp.current.space)}</span>
+          </div>
+          <div class="comparison-desc">${escapeHtml(comp.current.description)}</div>
         </div>
-        <div class="comparison-desc">${escapeHtml(comp.optimized.description)}</div>
-      </div>
-    `;
 
-    const tradeOffEl = document.getElementById('tradeoffExplanationText');
-    if (tradeOffEl) {
-      tradeOffEl.textContent = comp.tradeoffExplanation;
+        <div class="comparison-box optimized">
+          <div class="comparison-label">Suggested AI Optimization</div>
+          <div class="comparison-metrics">
+            <span class="complexity-badge time" style="background: #ecfdf5; color: #047857; border-color: #a7f3d0;">Time: ${escapeHtml(comp.optimized.time)}</span>
+            <span class="complexity-badge space" style="background: #f0fdfa; color: #0f766e; border-color: #99f6e4;">Space: ${escapeHtml(comp.optimized.space)}</span>
+          </div>
+          <div class="comparison-desc">${escapeHtml(comp.optimized.description)}</div>
+        </div>
+      `;
+      if (tradeOffEl) {
+        tradeOffEl.textContent = comp.tradeoffExplanation || comp.tradeoff;
+      }
+    } else if (complexity.comparisonTable && complexity.comparisonTable.length >= 2) {
+      const current = complexity.comparisonTable[0];
+      const opt = complexity.comparisonTable[1];
+      compGrid.innerHTML = `
+        <div class="comparison-box current">
+          <div class="comparison-label">${escapeHtml(current.metric)}</div>
+          <div class="comparison-metrics">
+            <span class="complexity-badge time">Time: ${escapeHtml(current.time)}</span>
+            <span class="complexity-badge space">Space: ${escapeHtml(current.space)}</span>
+          </div>
+          <div class="comparison-desc">Throughput: ${escapeHtml(current.throughput || 'Base')}</div>
+        </div>
+
+        <div class="comparison-box optimized">
+          <div class="comparison-label">${escapeHtml(opt.metric)}</div>
+          <div class="comparison-metrics">
+            <span class="complexity-badge time" style="background: #ecfdf5; color: #047857; border-color: #a7f3d0;">Time: ${escapeHtml(opt.time)}</span>
+            <span class="complexity-badge space" style="background: #f0fdfa; color: #0f766e; border-color: #99f6e4;">Space: ${escapeHtml(opt.space)}</span>
+          </div>
+          <div class="comparison-desc">Throughput: ${escapeHtml(opt.throughput || 'Optimized')}</div>
+        </div>
+      `;
+      if (tradeOffEl && complexity.recommendedPattern) {
+        tradeOffEl.textContent = complexity.recommendedPattern;
+      }
     }
   }
+}
+
+function updateFilterCounts(issues = []) {
+  const allCount = issues.length;
+  const critCount = issues.filter((i) => {
+    const s = (i.severity || '').toUpperCase();
+    return s === 'CRITICAL' || s === 'HIGH';
+  }).length;
+  const medCount = issues.filter((i) => (i.severity || '').toUpperCase() === 'MEDIUM').length;
+  const lowCount = issues.filter((i) => {
+    const s = (i.severity || '').toUpperCase();
+    return s === 'LOW' || s === 'SUGGESTION';
+  }).length;
+
+  const btnAll = document.querySelector('.issue-filter-btn[data-filter="ALL"]');
+  const btnCrit = document.querySelector('.issue-filter-btn[data-filter="CRITICAL"]');
+  const btnMed = document.querySelector('.issue-filter-btn[data-filter="MEDIUM"]');
+  const btnLow = document.querySelector('.issue-filter-btn[data-filter="LOW"]');
+
+  if (btnAll) btnAll.textContent = `All Issues (${allCount})`;
+  if (btnCrit) btnCrit.textContent = `Critical (${critCount})`;
+  if (btnMed) btnMed.textContent = `Medium (${medCount})`;
+  if (btnLow) btnLow.textContent = `Low (${lowCount})`;
 }
 
 function initIssueFilters() {
@@ -153,11 +225,16 @@ function renderIssues(issues = []) {
   const issuesContainer = document.getElementById('issuesContainer');
   if (!issuesContainer) return;
 
+  updateFilterCounts(issues);
   issuesContainer.innerHTML = '';
 
   let filtered = issues;
   if (currentFilter !== 'ALL') {
-    filtered = issues.filter((iss) => iss.severity.toUpperCase() === currentFilter);
+    filtered = issues.filter((iss) => {
+      const s = (iss.severity || '').toUpperCase();
+      if (currentFilter === 'CRITICAL') return s === 'CRITICAL' || s === 'HIGH';
+      return s === currentFilter;
+    });
   }
 
   if (filtered.length === 0) {
@@ -169,26 +246,59 @@ function renderIssues(issues = []) {
     return;
   }
 
-  filtered.forEach((issue, index) => {
+  filtered.forEach((issue) => {
     const card = document.createElement('div');
     card.className = 'issue-card';
     card.id = `issue-card-${issue.id}`;
 
+    const sevUpper = (issue.severity || 'LOW').toUpperCase();
     let badgeClass = 'badge-low';
-    if (issue.severity === 'CRITICAL') badgeClass = 'badge-critical';
-    else if (issue.severity === 'HIGH') badgeClass = 'badge-high';
-    else if (issue.severity === 'MEDIUM') badgeClass = 'badge-medium';
-    else if (issue.severity === 'SUGGESTION') badgeClass = 'badge-suggestion';
+    if (sevUpper === 'CRITICAL') badgeClass = 'badge-critical';
+    else if (sevUpper === 'HIGH') badgeClass = 'badge-high';
+    else if (sevUpper === 'MEDIUM') badgeClass = 'badge-medium';
+    else if (sevUpper === 'SUGGESTION') badgeClass = 'badge-suggestion';
+
+    const whatIsWrong =
+      issue.mentorExplanation?.whatIsWrong ||
+      issue.description ||
+      'Defect detected in this code section.';
+
+    const whyItMatters =
+      issue.mentorExplanation?.whyItMatters ||
+      issue.whyItMatters ||
+      'May produce unexpected runtime behavior or algorithmic performance degradation.';
+
+    const howToImprove =
+      issue.mentorExplanation?.howToImprove ||
+      (issue.suggestedFix ? 'Refactor code using the verified fix below:' : 'Follow idiomatic patterns and guard checks.');
+
+    const whatWillChange =
+      issue.mentorExplanation?.whatWillChange ||
+      'Restores predictable flow and eliminates vulnerability.';
+
+    const expectedComplexity =
+      issue.mentorExplanation?.expectedComplexity ||
+      issue.expectedComplexity ||
+      (currentReview?.timeComplexity || 'O(n)');
+
+    const codeDiff =
+      issue.codeFix ||
+      (issue.suggestedFix
+        ? issue.suggestedFix
+            .split('\n')
+            .map((l) => `+ ${l}`)
+            .join('\n')
+        : null);
 
     card.innerHTML = `
       <div class="issue-header">
         <div class="issue-title-area">
-          <span class="badge ${badgeClass}">${issue.severity}</span>
+          <span class="badge ${badgeClass}">${issue.severity || 'Medium'}</span>
           <span style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${escapeHtml(issue.title)}</span>
         </div>
         <div class="issue-meta">
           <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--teal-700);">Line ${issue.line}</span>
-          <span class="badge" style="background: var(--bg-subtle); color: var(--text-secondary);">${escapeHtml(issue.category)}</span>
+          <span class="badge" style="background: var(--bg-subtle); color: var(--text-secondary);">${escapeHtml(issue.category || 'General')}</span>
           <span class="toggle-icon" style="font-size: 12px; color: var(--text-tertiary);">▼</span>
         </div>
       </div>
@@ -199,7 +309,7 @@ function renderIssues(issues = []) {
             <span>❓</span> What is wrong?
           </div>
           <div class="mentor-answer">
-            ${escapeHtml(issue.mentorExplanation.whatIsWrong)}
+            ${escapeHtml(whatIsWrong)}
           </div>
         </div>
 
@@ -208,7 +318,7 @@ function renderIssues(issues = []) {
             <span>⚠️</span> Why does it matter?
           </div>
           <div class="mentor-answer">
-            ${escapeHtml(issue.mentorExplanation.whyItMatters)}
+            ${escapeHtml(whyItMatters)}
           </div>
         </div>
 
@@ -217,7 +327,7 @@ function renderIssues(issues = []) {
             <span>💡</span> How can it be improved?
           </div>
           <div class="mentor-answer">
-            ${escapeHtml(issue.mentorExplanation.howToImprove)}
+            ${escapeHtml(howToImprove)}
           </div>
         </div>
 
@@ -226,7 +336,7 @@ function renderIssues(issues = []) {
             <span>🔄</span> What will change after the fix?
           </div>
           <div class="mentor-answer">
-            ${escapeHtml(issue.mentorExplanation.whatWillChange)}
+            ${escapeHtml(whatWillChange)}
           </div>
         </div>
 
@@ -235,16 +345,16 @@ function renderIssues(issues = []) {
             <span>⚡</span> Expected complexity after improvement
           </div>
           <div class="mentor-answer" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--teal-700);">
-            ${escapeHtml(issue.mentorExplanation.expectedComplexity)}
+            ${escapeHtml(expectedComplexity)}
           </div>
         </div>
 
         ${
-          issue.codeFix
+          codeDiff
             ? `
           <div class="mentor-section">
-            <div class="mentor-question"><span>🛠️</span> Suggested Code Diff</div>
-            <pre class="mentor-fix-diff"><code>${formatDiff(issue.codeFix)}</code></pre>
+            <div class="mentor-question"><span>🛠️</span> Suggested Code Fix</div>
+            <pre class="mentor-fix-diff"><code>${formatDiff(codeDiff)}</code></pre>
           </div>
         `
             : ''
@@ -264,14 +374,12 @@ function renderIssues(issues = []) {
     const toggleIcon = card.querySelector('.toggle-icon');
 
     header.addEventListener('click', (e) => {
-      // Don't toggle if clicking inspect button
       if (e.target.closest('.focus-line-btn')) return;
       const isVisible = body.style.display !== 'none';
       body.style.display = isVisible ? 'none' : 'flex';
       toggleIcon.textContent = isVisible ? '▶' : '▼';
     });
 
-    // Inspect button links to code viewer line
     const inspectBtn = card.querySelector('.focus-line-btn');
     if (inspectBtn) {
       inspectBtn.addEventListener('click', (e) => {
@@ -358,15 +466,28 @@ function highlightCodeLine(lineNum, severity) {
 
 function colorizeSyntax(text) {
   let safe = escapeHtml(text);
-  // Comments
-  if (safe.trim().startsWith('//') || safe.trim().startsWith('/*') || safe.trim().startsWith('*')) {
+  // Comments (supports //, /*, *, #)
+  if (
+    safe.trim().startsWith('//') ||
+    safe.trim().startsWith('/*') ||
+    safe.trim().startsWith('*') ||
+    safe.trim().startsWith('#')
+  ) {
     return `<span class="token-comment">${safe}</span>`;
   }
 
-  // Basic JS/TS/Python keyword colorizer for preview
-  safe = safe.replace(/\b(import|export|class|public|private|function|const|let|var|if|else|for|return|def|package|while)\b/g, '<span class="token-kw">$1</span>');
-  safe = safe.replace(/\b(number|string|boolean|any|CalculationResult|Order|OrderItem|DiscountRule)\b/g, '<span class="token-type">$1</span>');
+  // Multi-language keywords: Java, Python, C, C++, JS, TS, Go, Kotlin, Rust
+  const kwPattern = /\b(import|export|from|as|class|interface|struct|enum|union|typedef|public|private|protected|internal|static|final|const|let|var|val|fun|func|fn|function|def|return|if|else|elif|for|while|do|switch|case|default|break|continue|match|when|try|catch|finally|throw|throws|raise|with|package|namespace|using|impl|trait|type|mut|override|virtual|constexpr|nullptr|null|nil|None|True|False|true|false|new|this|self|Self|super|async|await|suspend|defer|go|select|chan|yield|pass|unsafe|where)\b/g;
+  safe = safe.replace(kwPattern, '<span class="token-kw">$1</span>');
+
+  // Common types across all supported languages
+  const typePattern = /\b(int|long|short|byte|float|double|char|bool|boolean|string|String|number|any|void|size_t|uint64_t|int64_t|uint32_t|int32_t|u8|u16|u32|u64|usize|i8|i16|i32|i64|isize|f32|f64|str|Option|Result|Vec|BTreeMap|HashMap|Map|Set|HashSet|List|ArrayList|Array|Object|Promise|BigDecimal|MemoryBlock|Order|OrderDto|OrderItem|CustomerOrder)\b/g;
+  safe = safe.replace(typePattern, '<span class="token-type">$1</span>');
+
+  // Strings
   safe = safe.replace(/(".*?"|'.*?'|`.*?`)/g, '<span class="token-str">$1</span>');
+
+  // Numeric literals
   safe = safe.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="token-num">$1</span>');
 
   return safe;

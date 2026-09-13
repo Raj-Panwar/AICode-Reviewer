@@ -1,18 +1,31 @@
 /**
  * AI Code Reviewer - Mock Data Store
- * Structured to represent future Spring Boot REST API entities.
+ * Realistic, enterprise-grade mock data for static code analysis,
+ * Big-O algorithmic audits, repositories, and reviews across 9 languages:
+ * Java, Python, C, C++, JavaScript, TypeScript, Go, Kotlin, Rust.
  */
+
+export const mockDashboardMetrics = {
+  totalReviews: 48,
+  codeQualityScore: 88,
+  criticalIssuesResolved: 32,
+  avgTimeComplexity: "O(n log n)",
+  monthlyImprovement: "+14%",
+  openVulnerabilities: 3,
+  activeRepositories: 8,
+  linesReviewed: "142.8k"
+};
 
 export const mockStats = {
   totalReviews: 48,
-  criticalIssues: 3,
+  criticalIssues: 4,
   securityIssues: 1,
-  averageCodeQuality: 87,
+  averageCodeQuality: 88,
   averageComplexity: "O(n log n)",
   codeHealth: 87,
-  healthStatusText: "Your code is looking healthy. A few optimizations recommended.",
-  reviewsThisMonth: 19,
-  qualityTrend: "+4.2% from last month"
+  healthStatusText: "Good Code Health",
+  activeRepositories: 8,
+  linesReviewed: "142.8k"
 };
 
 export const mockRepositories = [
@@ -27,7 +40,63 @@ export const mockRepositories = [
     openIssues: 3,
     timeComplexity: "O(n log n)",
     spaceComplexity: "O(n)",
-    status: "Active"
+    status: "Active",
+    branches: ["main", "develop", "feature/payment-v2"],
+    files: [
+      {
+        name: "PaymentProcessor.java",
+        path: "src/main/java/com/fintech/checkout/PaymentProcessor.java",
+        language: "Java",
+        size: "3.4 KB",
+        code: `package com.fintech.checkout;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+public class PaymentProcessor {
+    private final Map<String, BigDecimal> customerWallets = new HashMap<>();
+
+    public boolean processTransaction(String customerId, BigDecimal amount, List<String> discountCodes) {
+        // Warning: Missing null check on customerId
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        BigDecimal discount = BigDecimal.ZERO;
+        // O(n²) nested discount search anti-pattern
+        for (String code : discountCodes) {
+            for (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {
+                if (entry.getKey().contains(code)) {
+                    discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));
+                }
+            }
+        }
+
+        BigDecimal finalAmount = amount.subtract(discount);
+        return customerWallets.containsKey(customerId);
+    }
+}`
+      },
+      {
+        name: "DiscountEngine.java",
+        path: "src/main/java/com/fintech/checkout/DiscountEngine.java",
+        language: "Java",
+        size: "2.1 KB",
+        code: `package com.fintech.checkout;
+
+import java.util.List;
+
+public class DiscountEngine {
+    public double calculateRebate(List<Double> cartAmounts) {
+        double sum = 0.0;
+        for (Double amt : cartAmounts) {
+            sum += amt;
+        }
+        return sum > 100.0 ? sum * 0.1 : 0.0;
+    }
+}`
+      }
+    ]
   },
   {
     id: "repo-102",
@@ -40,7 +109,47 @@ export const mockRepositories = [
     openIssues: 5,
     timeComplexity: "O(1)",
     spaceComplexity: "O(1)",
-    status: "Attention Needed"
+    status: "Attention Needed",
+    branches: ["master", "staging", "fix/jwt-expiry"],
+    files: [
+      {
+        name: "verifier.go",
+        path: "pkg/jwt/verifier.go",
+        language: "Go",
+        size: "2.8 KB",
+        code: `package jwt
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"errors"
+	"time"
+)
+
+type TokenClaims struct {
+	Subject   string
+	ExpiresAt int64
+}
+
+// VerifySignature performs constant-time HMAC check
+func VerifySignature(token string, secret []byte, expectedSig []byte) (bool, error) {
+	if len(token) == 0 {
+		return false, errors.New("empty token header")
+	}
+
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(token))
+	calculatedSig := mac.Sum(nil)
+
+	// Constant-time comparison defends against timing attacks
+	if !hmac.Equal(calculatedSig, expectedSig) {
+		return false, errors.New("signature mismatch")
+	}
+
+	return true, nil
+}`
+      }
+    ]
   },
   {
     id: "repo-103",
@@ -53,7 +162,44 @@ export const mockRepositories = [
     openIssues: 1,
     timeComplexity: "O(n log n)",
     spaceComplexity: "O(n)",
-    status: "Healthy"
+    status: "Healthy",
+    branches: ["main", "feat/graph-algos"],
+    files: [
+      {
+        name: "binary_search.py",
+        path: "src/algorithms/search/binary_search.py",
+        language: "Python",
+        size: "1.9 KB",
+        code: `def binary_search(arr: list[int], target: int) -> int:
+    """O(log n) Time, O(1) Space search in sorted array."""
+    left, right = 0, len(arr) - 1
+    
+    while left <= right:
+        mid = left + (right - left) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+            
+    return -1`
+      },
+      {
+        name: "two_sum_solution.py",
+        path: "src/algorithms/search/two_sum_solution.py",
+        language: "Python",
+        size: "1.4 KB",
+        code: `def two_sum_quadratic(nums: list[int], target: int) -> list[int]:
+    """Quadratic brute force O(n²) comparison."""
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []`
+      }
+    ]
   },
   {
     id: "repo-104",
@@ -66,7 +212,52 @@ export const mockRepositories = [
     openIssues: 4,
     timeComplexity: "O(n)",
     spaceComplexity: "O(n)",
-    status: "Active"
+    status: "Active",
+    branches: ["main", "develop", "feature/optimize-order-processing"],
+    files: [
+      {
+        name: "OrderProcessor.ts",
+        path: "src/services/OrderProcessor.ts",
+        language: "TypeScript",
+        size: "4.2 KB",
+        code: `export interface OrderItem {
+  id: string;
+  sku: string;
+  price: number;
+  quantity: number;
+}
+
+export interface CustomerOrder {
+  orderId: string;
+  customerId: string;
+  items: OrderItem[];
+  currency: string;
+}
+
+export class OrderProcessor {
+  private taxRateMap = new Map<string, number>([
+    ['US-CA', 0.0925],
+    ['US-NY', 0.0887],
+    ['EU-DE', 0.19]
+  ]);
+
+  public calculateTotal(order: CustomerOrder, jurisdiction: string): number {
+    let subtotal = 0;
+    
+    // Iterating items to compute subtotal
+    for (const item of order.items) {
+      if (item.price < 0 || item.quantity <= 0) {
+        throw new Error(\`Invalid item params for SKU: \${item.sku}\`);
+      }
+      subtotal += item.price * item.quantity;
+    }
+
+    const rate = this.taxRateMap.get(jurisdiction) || 0;
+    return subtotal * (1 + rate);
+  }
+}`
+      }
+    ]
   },
   {
     id: "repo-105",
@@ -79,305 +270,1172 @@ export const mockRepositories = [
     openIssues: 0,
     timeComplexity: "O(1)",
     spaceComplexity: "O(1)",
-    status: "Healthy"
+    status: "Healthy",
+    branches: ["main", "dev"],
+    files: [
+      {
+        name: "consistent_hash.rs",
+        path: "src/ring/consistent_hash.rs",
+        language: "Rust",
+        size: "3.1 KB",
+        code: `use std::collections::BTreeMap;
+
+pub struct ConsistentHashRing {
+    nodes: BTreeMap<u64, String>,
+    replicas: usize,
+}
+
+impl ConsistentHashRing {
+    pub fn new(replicas: usize) -> Self {
+        Self {
+            nodes: BTreeMap::new(),
+            replicas,
+        }
+    }
+
+    pub fn get_node(&self, hash_key: u64) -> Option<&String> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+
+        // Binary search log(n) on ordered BTreeMap ring
+        match self.nodes.range(hash_key..).next() {
+            Some((_, node)) => Some(node),
+            None => self.nodes.iter().next().map(|(_, node)| node),
+        }
+    }
+}`
+      }
+    ]
   },
   {
     id: "repo-106",
-    name: "user-recommendation-engine",
-    owner: "org-ai-labs",
-    defaultBranch: "develop",
-    language: "Python",
-    lastReviewed: "2026-09-06 20:10",
-    healthScore: 68,
-    openIssues: 7,
+    name: "embedded-telemetry-driver",
+    owner: "org-iot",
+    defaultBranch: "main",
+    language: "C",
+    lastReviewed: "2026-09-07 14:10",
+    healthScore: 82,
+    openIssues: 3,
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(1)",
+    status: "Active",
+    branches: ["main", "v1.2-maint"],
+    files: [
+      {
+        name: "buffer_pool.c",
+        path: "src/driver/buffer_pool.c",
+        language: "C",
+        size: "2.4 KB",
+        code: `#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BUFFERS 64
+#define BUFFER_SIZE 512
+
+typedef struct {
+    char data[BUFFER_SIZE];
+    int in_use;
+} MemoryBlock;
+
+static MemoryBlock pool[MAX_BUFFERS];
+
+int allocate_block(const char* payload, size_t len) {
+    if (len >= BUFFER_SIZE) return -1; // Bounds protection
+
+    // Linear O(n) search for first available block
+    for (int i = 0; i < MAX_BUFFERS; i++) {
+        if (!pool[i].in_use) {
+            pool[i].in_use = 1;
+            memcpy(pool[i].data, payload, len);
+            pool[i].data[len] = '\\0';
+            return i;
+        }
+    }
+    return -2; // Out of memory
+}`
+      }
+    ]
+  },
+  {
+    id: "repo-107",
+    name: "realtime-matching-engine",
+    owner: "org-fintech",
+    defaultBranch: "main",
+    language: "C++",
+    lastReviewed: "2026-09-06 18:20",
+    healthScore: 76,
+    openIssues: 4,
     timeComplexity: "O(n²)",
     spaceComplexity: "O(n)",
-    status: "Attention Needed"
+    status: "Attention Needed",
+    branches: ["main", "experimental"],
+    files: [
+      {
+        name: "order_book.cpp",
+        path: "src/engine/order_book.cpp",
+        language: "C++",
+        size: "3.7 KB",
+        code: `#include <iostream>
+#include <vector>
+#include <algorithm>
+
+struct Order {
+    int id;
+    double price;
+    int quantity;
+    bool is_buy;
+};
+
+class OrderBook {
+private:
+    std::vector<Order> buy_orders;
+    std::vector<Order> sell_orders;
+
+public:
+    void cancel_order(int order_id) {
+        // O(n) scan with vector erase causing O(n) shift
+        for (auto it = buy_orders.begin(); it != buy_orders.end(); ++it) {
+            if (it->id == order_id) {
+                buy_orders.erase(it);
+                return;
+            }
+        }
+    }
+};`
+      }
+    ]
+  },
+  {
+    id: "repo-108",
+    name: "mobile-android-client",
+    owner: "org-mobile",
+    defaultBranch: "main",
+    language: "Kotlin",
+    lastReviewed: "2026-09-05 12:45",
+    healthScore: 91,
+    openIssues: 2,
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(n)",
+    status: "Healthy",
+    branches: ["main", "release/2.4"],
+    files: [
+      {
+        name: "AccountRepository.kt",
+        path: "app/src/main/kotlin/com/fintech/app/AccountRepository.kt",
+        language: "Kotlin",
+        size: "2.6 KB",
+        code: `package com.fintech.app
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+data class UserAccount(val id: String, val balance: Double, val tier: String)
+
+class AccountRepository {
+    private val accounts = mutableListOf<UserAccount>()
+
+    suspend fun getAccountById(id: String): UserAccount? = withContext(Dispatchers.IO) {
+        // Linear O(n) lookup across in-memory cache
+        accounts.find { it.id == id }
+    }
+
+    fun addAccount(account: UserAccount) {
+        accounts.add(account)
+    }
+}`
+      }
+    ]
+  },
+  {
+    id: "repo-109",
+    name: "web-dashboard-fe",
+    owner: "org-web",
+    defaultBranch: "main",
+    language: "JavaScript",
+    lastReviewed: "2026-09-04 16:30",
+    healthScore: 85,
+    openIssues: 3,
+    timeComplexity: "O(n²)",
+    spaceComplexity: "O(n)",
+    status: "Active",
+    branches: ["main", "feat/charts"],
+    files: [
+      {
+        name: "dataAggregator.js",
+        path: "src/analytics/dataAggregator.js",
+        language: "JavaScript",
+        size: "2.3 KB",
+        code: `// Analytics metrics aggregator
+export function aggregateUserSessions(events, targetUserId) {
+  // Quadratic O(n²) filter with inner array scan
+  const userEvents = events.filter((ev) => {
+    return ev.userId === targetUserId && events.indexOf(ev) >= 0;
+  });
+
+  const summary = {
+    totalDuration: 0,
+    pageViews: 0
+  };
+
+  userEvents.forEach(e => {
+    summary.totalDuration += (e.duration || 0);
+    summary.pageViews += 1;
+  });
+
+  return summary;
+}`
+      }
+    ]
   }
 ];
 
 export const mockReviews = [
+  // 1. TypeScript Review
   {
     id: "REV-2041",
-    project: "Order Processing Engine",
-    repository: "order-processing-pipeline",
-    branch: "main",
+    project: "order-processing-pipeline",
+    repository: "org-fintech/order-processing-pipeline",
+    branch: "feature/optimize-order-processing",
     file: "src/services/OrderProcessor.ts",
     language: "TypeScript",
-    date: "2026-09-12 10:45",
-    overallScore: 87,
-    status: "Completed",
+    date: "2026-09-13 10:14",
+    overallScore: 84,
+    status: "Attention Needed",
     timeComplexity: "O(n²)",
-    spaceComplexity: "O(1)",
+    spaceComplexity: "O(n)",
     counts: {
-      bugs: 1,
-      security: 0,
-      quality: 2,
-      performance: 1,
-      suggestions: 1
+      critical: 1,
+      bugs: 2,
+      security: 1,
+      performance: 2,
+      complexity: 1,
+      quality: 1
     },
     complexityAnalysis: {
-      timeComplexity: "O(n²)",
-      timeBestCase: "O(n)",
-      timeAverageCase: "O(n²)",
-      timeWorstCase: "O(n²)",
-      spaceComplexity: "O(1) auxiliary",
-      summaryExplanation: "The nested loop iterates through the entire discount catalog for each line item in the customer order, resulting in quadratic O(n²) time complexity. Auxiliary memory usage remains O(1) as no supplementary data structures are allocated.",
-      contributingParts: [
-        { line: 42, label: "Outer Loop: Iterates over order.items (size n)" },
-        { line: 45, label: "Inner Loop: Linear scan through applicableDiscounts array (size m)" }
-      ],
-      comparison: {
-        current: {
-          time: "O(n²)",
-          space: "O(1)",
-          description: "Brute-force iteration over discounts for every line item. Becomes a severe bottleneck when order volume or discount matrices scale."
-        },
-        optimized: {
-          time: "O(n)",
-          space: "O(n)",
-          description: "Index the discount matrix into a Map<string, DiscountRule> beforehand. Item lookups then become O(1), bringing total time down to linear O(n)."
-        },
-        tradeoffExplanation: "Using a Map trades O(k) additional auxiliary memory (where k is unique discount rules) to replace repeated O(n) lookups with instantaneous O(1) key lookups, yielding a 94% execution latency improvement on realistic payloads."
-      }
+      time: "O(n²)",
+      space: "O(n)",
+      timeExplanation: "Nested iterations over order items and discount rules create quadratic time complexity O(n * m) where n is order items and m is discounts.",
+      spaceExplanation: "Allocates auxiliary intermediate maps for discount verification.",
+      bottleneckLine: 34,
+      isOptimal: false,
+      recommendedPattern: "Hash Map complement index for constant O(1) discount validation, reducing total runtime to clean linear O(n).",
+      comparisonTable: [
+        { metric: "Current Implementation", time: "O(n²)", space: "O(n)", throughput: "~420 ops/sec" },
+        { metric: "Mentor Recommendation", time: "O(n)", space: "O(n)", throughput: "~12,500 ops/sec" }
+      ]
     },
-    codeContent: `import { Order, OrderItem, DiscountRule, CalculationResult } from '../types';
+    codeContent: `import { Injectable, Logger } from '@nestjs/common';
+import { CustomerRepository } from '../repositories/customer.repository';
+import { InventoryService } from './inventory.service';
+import { OrderDto, ProcessedOrderResult, DiscountRule } from '../dto/order.dto';
 
+@Injectable()
 export class OrderProcessor {
-  private taxRate: number = 0.0825;
+  private readonly logger = new Logger(OrderProcessor.name);
 
-  /**
-   * Processes cart items, verifies inventory, and applies best matching discounts.
-   */
-  public calculateTotal(order: Order, discounts: DiscountRule[]): CalculationResult {
-    if (!order || !order.items || order.items.length === 0) {
-      return { subtotal: 0, tax: 0, discount: 0, total: 0 };
-    }
+  constructor(
+    private readonly customerRepo: CustomerRepository,
+    private readonly inventoryService: InventoryService,
+  ) {}
 
-    let subtotal = 0;
-    let totalDiscount = 0;
-
-    // Calculate base item totals
-    for (const item of order.items) {
-      subtotal += item.price * item.quantity;
-    }
-
-    // LINE 24: Potential Null Pointer when accessing customer metadata
-    const userTier = order.customer.tier.toLowerCase();
+  public async processOrder(order: OrderDto): Promise<ProcessedOrderResult> {
+    const customer = await this.customerRepo.findById(order.customerId);
     
-    // LINE 32: Inefficient repeated string concatenation in logging
-    let debugLog = "";
-    for (let i = 0; i < order.items.length; i++) {
-      debugLog = debugLog + "Item #" + i + ": " + order.items[i].sku + "; ";
-    }
+    // Issue 1: Missing null check on customer before accessing property
+    this.logger.log(\`Processing order for customer status: \${customer.membershipTier}\`);
 
-    // LINE 42: O(n²) Nested Loop Bottleneck
-    for (const item of order.items) {
-      for (const discount of discounts) {
-        if (discount.applicableSku === item.sku && discount.active) {
-          totalDiscount += (item.price * discount.percentage) / 100;
+    // Issue 2: Hardcoded credentials fallback
+    const apiKey = process.env.PAYMENT_GATEWAY_KEY || "test_sk_live_9941a8b72c";
+
+    let finalTotal = 0;
+
+    // Issue 3: Inefficient O(n * m) nested iteration
+    for (let i = 0; i < order.items.length; i++) {
+      const item = order.items[i];
+      let itemDiscount = 0;
+
+      // Nested scan across active promotional discounts
+      for (let j = 0; j < order.activeDiscounts.length; j++) {
+        const discount = order.activeDiscounts[j];
+        if (discount.applicableCategory === item.category) {
+          itemDiscount += discount.percentage;
         }
       }
+
+      const discountedPrice = item.price * (1 - itemDiscount);
+      finalTotal += discountedPrice * item.quantity;
     }
 
-    // LINE 54: Floating-point precision error risk
-    const rawTax = (subtotal - totalDiscount) * this.taxRate;
-    const finalTotal = subtotal - totalDiscount + rawTax;
-
     return {
-      subtotal,
-      discount: totalDiscount,
-      tax: Math.round(rawTax * 100) / 100,
-      total: Math.round(finalTotal * 100) / 100
+      orderId: order.id,
+      finalAmount: finalTotal,
+      processedAt: new Date().toISOString()
     };
   }
 }`,
     issues: [
       {
-        id: "ISSUE-1",
-        severity: "CRITICAL",
-        category: "Bug Detection",
-        line: 24,
-        title: "Unsafe Property Access on Customer Object",
-        summary: "Direct property access on customer.tier without nullish verification.",
-        mentorExplanation: {
-          whatIsWrong: "The code assumes order.customer and order.customer.tier are always populated. If an anonymous or guest order is processed, order.customer is null or undefined, throwing an unhandled TypeError: Cannot read properties of undefined.",
-          whyItMatters: "In e-commerce checkout flows, guest orders without populated user tiers account for over 35% of cart completions. This uncaught exception immediately crashes the checkout pipeline and drops valid customer purchases.",
-          howToImprove: "Use optional chaining (order.customer?.tier?.toLowerCase()) with a safe fallback to 'guest'.",
-          whatWillChange: "Guest checkouts succeed cleanly without runtime exceptions, preserving customer conversion.",
-          expectedComplexity: "Time: O(1), Space: O(1) (No change in algorithmic complexity, prevents fatal runtime crash)."
-        },
-        codeFix: `- const userTier = order.customer.tier.toLowerCase();\n+ const userTier = order.customer?.tier?.toLowerCase() ?? 'standard';`
+        id: "ISSUE-101",
+        line: 18,
+        category: "Bugs",
+        severity: "Critical",
+        title: "Potential Null Pointer Dereference on Customer Entity",
+        description: "customerRepo.findById can resolve to null when the customerId is invalid or soft-deleted. Accessing customer.membershipTier directly on line 18 throws an unhandled TypeError in production.",
+        whyItMatters: "If an anonymous user or deleted customer submits a checkout, this causes a 500 Internal Server Error crash instead of a graceful 404/422 validation response.",
+        suggestedFix: `if (!customer) {
+  throw new NotFoundException(\`Customer with ID \${order.customerId} does not exist\`);
+}`
       },
       {
-        id: "ISSUE-2",
-        severity: "MEDIUM",
-        category: "Complexity & Performance",
-        line: 42,
-        title: "Nested Loop Leads to Quadratic O(n²) Time Complexity",
-        summary: "Inner loop scans discounts array for every individual order item.",
-        mentorExplanation: {
-          whatIsWrong: "For every single item in order.items (size n), the inner loop iterates over the discounts array (size m). This causes n * m comparisons, scaling quadratically O(n²).",
-          whyItMatters: "As inventory catalogs and promotional discount lists expand, checkout response times degrade significantly from ~12ms to over 850ms, causing UI lag and timeout errors under peak flash-sale traffic.",
-          howToImprove: "Pre-index the discounts array into a Map keyed by applicableSku before processing items. Then lookup each item's discount in O(1) constant time.",
-          whatWillChange: "Replaces the inner search loop with an instant Map lookup, dropping execution time from O(n * m) to linear O(n + m).",
-          expectedComplexity: "Time improves from O(n²) to O(n). Auxiliary space increases slightly from O(1) to O(m) for the Map hash index."
-        },
-        codeFix: `+ const discountMap = new Map(discounts.filter(d => d.active).map(d => [d.applicableSku, d]));\n+ for (const item of order.items) {\n+   const match = discountMap.get(item.sku);\n+   if (match) totalDiscount += (item.price * match.percentage) / 100;\n+ }`
+        id: "ISSUE-102",
+        line: 21,
+        category: "Security",
+        severity: "Critical",
+        title: "Hardcoded Secret Fallback in Source Code",
+        description: "Found fallback payment gateway key string in source code. Fallback secrets can easily leak into client bundles, log files, or public repositories.",
+        whyItMatters: "Exposes critical payment processing privileges if the environment variable is unset during misconfigured deployment pipelines.",
+        suggestedFix: `const apiKey = process.env.PAYMENT_GATEWAY_KEY;
+if (!apiKey) {
+  throw new InternalServerErrorException("PAYMENT_GATEWAY_KEY environment variable is mandatory.");
+}`
       },
       {
-        id: "ISSUE-3",
-        severity: "LOW",
-        category: "Code Quality",
-        line: 32,
-        title: "Repeated String Concatenation Inside Loop",
-        summary: "Strings are immutable; concatenating in a loop causes unnecessary memory allocations.",
-        mentorExplanation: {
-          whatIsWrong: "Strings in JavaScript/TypeScript are immutable. Reassigning debugLog = debugLog + ... creates a new intermediate string buffer in the memory heap on every loop iteration.",
-          whyItMatters: "For large orders with hundreds of line items, this produces high Garbage Collection (GC) churn and avoidable heap thrashing.",
-          howToImprove: "Collect log tokens into an array and join them once with .join('; '), or use standard structured telemetry logging.",
-          whatWillChange: "Reduces memory allocations from O(n) string copies to a single streamlined buffer join.",
-          expectedComplexity: "Time: O(n), Space: O(n) with significantly lower GC pressure."
-        },
-        codeFix: `- let debugLog = "";\n- for (let i = 0; i < order.items.length; i++) {\n-   debugLog = debugLog + "Item #" + i + ": " + order.items[i].sku + "; ";\n- }\n+ const debugLog = order.items.map((it, i) => \`Item #\${i}: \${it.sku}\`).join('; ');`
-      },
-      {
-        id: "ISSUE-4",
-        severity: "SUGGESTION",
-        category: "Best Practices",
-        line: 54,
-        title: "Floating-Point Currency Arithmetic",
-        summary: "IEEE 754 floating-point numbers can accumulate rounding inaccuracies in financial calculations.",
-        mentorExplanation: {
-          whatIsWrong: "Standard JavaScript number types use double-precision float representation (64-bit IEEE 754). Multiplying decimals like 0.1 * 0.2 produces 0.020000000000000004.",
-          whyItMatters: "In financial transactions and tax ledgers, sub-cent discrepancies cause audit mismatches, reconciliation errors, and Stripe/payment gateway validation rejections.",
-          howToImprove: "Represent monetary values as integer cents (e.g. $19.99 = 1999 cents) or utilize a dedicated high-precision BigNumber library.",
-          whatWillChange: "Guarantees 100% mathematical precision across all currency calculations.",
-          expectedComplexity: "Time: O(1), Space: O(1)."
-        },
-        codeFix: `// Best Practice: Represent monetary balances in integer cents\nconst subtotalCents = Math.round(subtotal * 100);\nconst discountCents = Math.round(totalDiscount * 100);\nconst taxCents = Math.round((subtotalCents - discountCents) * this.taxRate);`
+        id: "ISSUE-103",
+        line: 30,
+        category: "Complexity",
+        severity: "Medium",
+        title: "Algorithmic Inefficiency: Quadratic O(n*m) Nested Discount Loop",
+        description: "Looping through order.items with an inner loop over order.activeDiscounts results in quadratic O(n*m) time complexity. Pre-indexing discounts by category in a Map converts this to linear O(n).",
+        whyItMatters: "Under high flash-sale cart loads with 50+ items and multiple bundled vouchers, this degrades CPU performance by 30x.",
+        suggestedFix: `const discountMap = new Map<string, number>();
+for (const d of order.activeDiscounts) {
+  discountMap.set(d.applicableCategory, (discountMap.get(d.applicableCategory) || 0) + d.percentage);
+}
+
+for (const item of order.items) {
+  const discountRate = discountMap.get(item.category) || 0;
+  finalTotal += (item.price * (1 - discountRate)) * item.quantity;
+}`
       }
     ]
   },
+
+  // 2. Java Review
+  {
+    id: "REV-2042",
+    project: "ecommerce-checkout-service",
+    repository: "org-fintech/ecommerce-checkout-service",
+    branch: "main",
+    file: "src/main/java/com/fintech/checkout/PaymentProcessor.java",
+    language: "Java",
+    date: "2026-09-12 14:30",
+    overallScore: 89,
+    status: "Completed",
+    timeComplexity: "O(n²)",
+    spaceComplexity: "O(1)",
+    counts: {
+      critical: 1,
+      bugs: 1,
+      security: 0,
+      performance: 1,
+      complexity: 1,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n²)",
+      space: "O(1)",
+      timeExplanation: "Nested iteration comparing discount codes against customer wallet keys causes quadratic comparisons on larger catalogs.",
+      spaceExplanation: "In-place accumulation uses constant auxiliary stack space.",
+      bottleneckLine: 18,
+      isOptimal: false,
+      recommendedPattern: "Pre-aggregate wallet discount prefixes in a HashSet for O(1) lookup.",
+      comparisonTable: [
+        { metric: "Current (Nested Scan)", time: "O(n²)", space: "O(1)", throughput: "~1,200 tx/sec" },
+        { metric: "Optimized (HashSet)", time: "O(n)", space: "O(n)", throughput: "~18,000 tx/sec" }
+      ]
+    },
+    codeContent: `package com.fintech.checkout;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+public class PaymentProcessor {
+    private final Map<String, BigDecimal> customerWallets = new HashMap<>();
+
+    public boolean processTransaction(String customerId, BigDecimal amount, List<String> discountCodes) {
+        if (customerId == null || customerId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Customer ID cannot be empty");
+        }
+
+        BigDecimal discount = BigDecimal.ZERO;
+
+        // Quadratic nested scan across discount codes and wallet keys
+        for (String code : discountCodes) {
+            for (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {
+                if (entry.getKey().contains(code)) {
+                    discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));
+                }
+            }
+        }
+
+        BigDecimal finalAmount = amount.subtract(discount);
+        return customerWallets.containsKey(customerId);
+    }
+}`,
+    issues: [
+      {
+        id: "ISSUE-201",
+        line: 16,
+        category: "Complexity",
+        severity: "Medium",
+        title: "Quadratic Complexity in Wallet Code Matching",
+        description: "Nested loops compare every discount voucher code against the entire map of customer wallet entries, producing O(k * w) operations.",
+        whyItMatters: "As wallet items grow, checkout response times degrade significantly from ~15ms to over 300ms during flash sales.",
+        suggestedFix: `Set<String> applicableCodes = new HashSet<>(discountCodes);
+for (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {
+    if (applicableCodes.contains(entry.getKey())) {
+        discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));
+    }
+}`
+      },
+      {
+        id: "ISSUE-202",
+        line: 25,
+        category: "Bugs",
+        severity: "Critical",
+        title: "BigDecimal Floating Point Rounding Inaccuracy",
+        description: "BigDecimal.valueOf(0.05) creates subtle precision discrepancies in financial calculations compared to string-based initialization BigDecimal('0.05').",
+        whyItMatters: "Can lead to multi-cent rounding drifts on large transaction volumes.",
+        suggestedFix: `discount = discount.add(entry.getValue().multiply(new BigDecimal("0.05")));`
+      }
+    ]
+  },
+
+  // 3. Python Review
+  {
+    id: "REV-2039",
+    project: "dsa-algorithm-lab",
+    repository: "rajesh-panwar/dsa-algorithm-lab",
+    branch: "main",
+    file: "src/algorithms/search/two_sum_solution.py",
+    language: "Python",
+    date: "2026-09-10 18:40",
+    overallScore: 92,
+    status: "Completed",
+    timeComplexity: "O(n²)",
+    spaceComplexity: "O(1)",
+    counts: {
+      critical: 0,
+      bugs: 0,
+      security: 0,
+      performance: 1,
+      complexity: 1,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n²)",
+      space: "O(1)",
+      timeExplanation: "Two nested loops iterate over the array, checking every pair of elements.",
+      spaceExplanation: "No additional data structures allocated.",
+      bottleneckLine: 6,
+      isOptimal: false,
+      recommendedPattern: "Hash Map Single-Pass O(n) Time, O(n) Space.",
+      comparisonTable: [
+        { metric: "Brute Force", time: "O(n²)", space: "O(1)", throughput: "~800 ops/sec" },
+        { metric: "Hash Map Complement", time: "O(n)", space: "O(n)", throughput: "~35,000 ops/sec" }
+      ]
+    },
+    codeContent: `def two_sum_quadratic(nums: list[int], target: int) -> list[int]:
+    """Quadratic brute force O(n²) comparison."""
+    n = len(nums)
+    # Outer and inner loop checking every pair
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []`,
+    issues: [
+      {
+        id: "ISSUE-301",
+        line: 5,
+        category: "Complexity",
+        severity: "Medium",
+        title: "Quadratic Time Complexity O(n²) in Pair Sum Lookup",
+        description: "Brute-force nested loops inspect every pair of numbers in O(n²) time. A single-pass dictionary lookup achieves linear O(n) performance.",
+        whyItMatters: "On an input of 50,000 elements, O(n²) performs 1.25 billion operations, freezing the thread.",
+        suggestedFix: `seen = {}
+for i, num in enumerate(nums):
+    complement = target - num
+    if complement in seen:
+        return [seen[complement], i]
+    seen[num] = i
+return []`
+      }
+    ]
+  },
+
+  // 4. Go Review
   {
     id: "REV-2040",
-    project: "Auth Gateway",
-    repository: "auth-gateway-proxy",
+    project: "auth-gateway-proxy",
+    repository: "org-fintech/auth-gateway-proxy",
     branch: "master",
     file: "pkg/jwt/verifier.go",
     language: "Go",
-    date: "2026-09-11 14:10",
-    overallScore: 78,
-    status: "Attention Needed",
+    date: "2026-09-11 09:15",
+    overallScore: 95,
+    status: "Completed",
     timeComplexity: "O(1)",
     spaceComplexity: "O(1)",
-    counts: { bugs: 0, security: 1, quality: 3, performance: 1, suggestions: 1 },
+    counts: {
+      critical: 0,
+      bugs: 0,
+      security: 0,
+      performance: 0,
+      complexity: 0,
+      quality: 1
+    },
     complexityAnalysis: {
-      timeComplexity: "O(1)",
-      timeBestCase: "O(1)",
-      timeAverageCase: "O(1)",
-      timeWorstCase: "O(1)",
-      spaceComplexity: "O(1)",
-      summaryExplanation: "The JWT verification pipeline relies on constant-time cryptographic hash operations and constant-length signature validation.",
-      contributingParts: [
-        { line: 28, label: "HMAC-SHA256 signature verification" }
-      ],
-      comparison: {
-        current: { time: "O(1)", space: "O(1)", description: "Cryptographic constant time" },
-        optimized: { time: "O(1)", space: "O(1)", description: "Add in-memory token cache for verified public keys" },
-        tradeoffExplanation: "Caching decoded public keys reduces JWKS endpoint fetching overhead while preserving O(1) runtime."
+      time: "O(1)",
+      space: "O(1)",
+      timeExplanation: "HMAC verification and constant-time string comparison execute in bounded O(1) time relative to the cryptographic signature size.",
+      spaceExplanation: "Fixed-size 32-byte cryptographic buffer allocated on stack.",
+      bottleneckLine: 24,
+      isOptimal: true,
+      recommendedPattern: "Architecture follows optimal cryptographic constant-time comparison standards.",
+      comparisonTable: [
+        { metric: "Current (hmac.Equal)", time: "O(1)", space: "O(1)", throughput: "~48,000 req/sec" }
+      ]
+    },
+    codeContent: `package jwt
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"errors"
+)
+
+// VerifySignature performs constant-time HMAC check
+func VerifySignature(token string, secret []byte, expectedSig []byte) (bool, error) {
+	if len(token) == 0 {
+		return false, errors.New("empty token header")
+	}
+
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(token))
+	calculatedSig := mac.Sum(nil)
+
+	// Constant-time comparison defends against timing attacks
+	if !hmac.Equal(calculatedSig, expectedSig) {
+		return false, errors.New("signature mismatch")
+	}
+
+	return true, nil
+}`,
+    issues: [
+      {
+        id: "ISSUE-401",
+        line: 12,
+        category: "Quality",
+        severity: "Low",
+        title: "Missing Secret Key Length Assertion",
+        description: "HMAC-SHA256 requires high-entropy keys. Secret slices under 32 bytes should fail validation during gateway startup.",
+        whyItMatters: "Weak secrets undermine cryptographic guarantees against offline brute-force attacks.",
+        suggestedFix: `if len(secret) < 32 {
+    return false, errors.New("HMAC secret key must be at least 32 bytes")
+}`
       }
-    }
+    ]
   },
-  {
-    id: "REV-2039",
-    project: "DSA Algorithms",
-    repository: "dsa-algorithm-lab",
-    branch: "main",
-    file: "src/algorithms/search/binary_search.py",
-    language: "Python",
-    date: "2026-09-10 11:25",
-    overallScore: 94,
-    status: "Completed",
-    timeComplexity: "O(log n)",
-    spaceComplexity: "O(1)",
-    counts: { bugs: 0, security: 0, quality: 1, performance: 0, suggestions: 1 },
-    complexityAnalysis: {
-      timeComplexity: "O(log n)",
-      timeBestCase: "O(1)",
-      timeAverageCase: "O(log n)",
-      timeWorstCase: "O(log n)",
-      spaceComplexity: "O(1)",
-      summaryExplanation: "Binary search halves the search range on every iteration, leading to logarithmic O(log n) time complexity with constant O(1) pointers.",
-      contributingParts: [
-        { line: 14, label: "Midpoint calculation and range halving while left <= right" }
-      ],
-      comparison: {
-        current: { time: "O(log n)", space: "O(1)", description: "Optimal iterative binary search" },
-        optimized: { time: "O(log n)", space: "O(1)", description: "Prevent integer overflow on mid calculation" },
-        tradeoffExplanation: "Calculating mid as left + (right - left) // 2 prevents potential 32-bit integer overflow while maintaining O(log n)."
-      }
-    }
-  },
-  {
-    id: "REV-2038",
-    project: "User Recommendation Engine",
-    repository: "user-recommendation-engine",
-    branch: "develop",
-    file: "src/recommender/collaborative_filter.py",
-    language: "Python",
-    date: "2026-09-08 17:30",
-    overallScore: 68,
-    status: "Attention Needed",
-    timeComplexity: "O(n²)",
-    spaceComplexity: "O(n)",
-    counts: { bugs: 2, security: 0, quality: 3, performance: 2, suggestions: 2 },
-    complexityAnalysis: {
-      timeComplexity: "O(n²)",
-      timeBestCase: "O(n)",
-      timeAverageCase: "O(n²)",
-      timeWorstCase: "O(n²)",
-      spaceComplexity: "O(n)",
-      summaryExplanation: "Compares every user preference vector against all other user vectors pairwise without vectorization or indexing.",
-      contributingParts: [
-        { line: 36, label: "Double loop calculating cosine similarity across all pairs" }
-      ],
-      comparison: {
-        current: { time: "O(n²)", space: "O(n)", description: "Pairwise brute force cosine comparisons" },
-        optimized: { time: "O(n log n)", space: "O(n)", description: "Approximate Nearest Neighbors (ANN) via FAISS / HNSW index" },
-        tradeoffExplanation: "Using an Approximate Nearest Neighbor index drops retrieval time from quadratic to sub-linear with negligible loss in recommendation accuracy."
-      }
-    }
-  },
+
+  // 5. Rust Review
   {
     id: "REV-2037",
-    project: "Distributed Cache Client",
-    repository: "distributed-cache-client",
+    project: "distributed-cache-client",
+    repository: "org-infra/distributed-cache-client",
     branch: "main",
     file: "src/ring/consistent_hash.rs",
     language: "Rust",
-    date: "2026-09-07 14:15",
+    date: "2026-09-08 16:55",
     overallScore: 96,
     status: "Completed",
-    timeComplexity: "O(log v)",
-    spaceComplexity: "O(v)",
-    counts: { bugs: 0, security: 0, quality: 0, performance: 0, suggestions: 1 },
+    timeComplexity: "O(log n)",
+    spaceComplexity: "O(n)",
+    counts: {
+      critical: 0,
+      bugs: 0,
+      security: 0,
+      performance: 0,
+      complexity: 0,
+      quality: 1
+    },
     complexityAnalysis: {
-      timeComplexity: "O(log v)",
-      timeBestCase: "O(1)",
-      timeAverageCase: "O(log v)",
-      timeWorstCase: "O(log v)",
-      spaceComplexity: "O(v) where v = virtual nodes",
-      summaryExplanation: "Binary search along the consistent hash ring of virtual nodes achieves logarithmic O(log v) lookup time with O(v) memory.",
-      contributingParts: [
-        { line: 48, label: "BTreeMap range query to find node on hash ring" }
-      ],
-      comparison: {
-        current: { time: "O(log v)", space: "O(v)", description: "Balanced tree lookup" },
-        optimized: { time: "O(1)", space: "O(v)", description: "Jump consistent hash algorithm for bounded clusters" },
-        tradeoffExplanation: "Jump hash eliminates the need to store a ring table at the cost of requiring sequential node ID indexing."
-      }
+      time: "O(log n)",
+      space: "O(n)",
+      timeExplanation: "BTreeMap range query searches the balanced red-black ring in logarithmic O(log n) time.",
+      spaceExplanation: "Stores virtual replica nodes in memory.",
+      bottleneckLine: 18,
+      isOptimal: true,
+      recommendedPattern: "Logarithmic binary search in ordered ring is standard optimal consistent hashing.",
+      comparisonTable: [
+        { metric: "Current (BTreeMap Ring)", time: "O(log n)", space: "O(n)", throughput: "~95,000 lookups/sec" }
+      ]
+    },
+    codeContent: `use std::collections::BTreeMap;
+
+pub struct ConsistentHashRing {
+    nodes: BTreeMap<u64, String>,
+    replicas: usize,
+}
+
+impl ConsistentHashRing {
+    pub fn new(replicas: usize) -> Self {
+        Self {
+            nodes: BTreeMap::new(),
+            replicas,
+        }
     }
+
+    pub fn get_node(&self, hash_key: u64) -> Option<&String> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+
+        // Binary search log(n) on ordered BTreeMap ring
+        match self.nodes.range(hash_key..).next() {
+            Some((_, node)) => Some(node),
+            None => self.nodes.iter().next().map(|(_, node)| node),
+        }
+    }
+}`,
+    issues: [
+      {
+        id: "ISSUE-501",
+        line: 16,
+        category: "Quality",
+        severity: "Low",
+        title: "Consider Returning String Slice &str",
+        description: "Returning Option<&str> instead of Option<&String> offers cleaner idiomatic Rust interoperability.",
+        whyItMatters: "Allows callers to borrow slices without binding to the concrete String type.",
+        suggestedFix: `pub fn get_node(&self, hash_key: u64) -> Option<&str> {
+    // ...
+    Some(node.as_str())
+}`
+      }
+    ]
+  },
+
+  // 6. C Review
+  {
+    id: "REV-2043",
+    project: "embedded-telemetry-driver",
+    repository: "org-iot/embedded-telemetry-driver",
+    branch: "main",
+    file: "src/driver/buffer_pool.c",
+    language: "C",
+    date: "2026-09-07 14:10",
+    overallScore: 82,
+    status: "Attention Needed",
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(1)",
+    counts: {
+      critical: 1,
+      bugs: 1,
+      security: 1,
+      performance: 1,
+      complexity: 0,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n)",
+      space: "O(1)",
+      timeExplanation: "Linear search across 64 pool slots to locate free memory buffer.",
+      spaceExplanation: "Static memory allocation with zero dynamic heap churn.",
+      bottleneckLine: 18,
+      isOptimal: false,
+      recommendedPattern: "Bitmask index O(1) bit-scan (e.g. __builtin_ctzll) for instant allocation.",
+      comparisonTable: [
+        { metric: "Linear Scan", time: "O(n)", space: "O(1)", throughput: "~180k allocs/sec" },
+        { metric: "Bitmask Scan", time: "O(1)", space: "O(1)", throughput: "~12M allocs/sec" }
+      ]
+    },
+    codeContent: `#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BUFFERS 64
+#define BUFFER_SIZE 512
+
+typedef struct {
+    char data[BUFFER_SIZE];
+    int in_use;
+} MemoryBlock;
+
+static MemoryBlock pool[MAX_BUFFERS];
+
+int allocate_block(const char* payload, size_t len) {
+    // Potential buffer boundary issue if len >= BUFFER_SIZE
+    if (len >= BUFFER_SIZE) return -1;
+
+    // Linear O(n) search for first available block
+    for (int i = 0; i < MAX_BUFFERS; i++) {
+        if (!pool[i].in_use) {
+            pool[i].in_use = 1;
+            memcpy(pool[i].data, payload, len);
+            pool[i].data[len] = '\\0';
+            return i;
+        }
+    }
+    return -2; // Out of memory
+}`,
+    issues: [
+      {
+        id: "ISSUE-601",
+        line: 18,
+        category: "Bugs",
+        severity: "Critical",
+        title: "Missing Null Pointer Check on Payload Buffer",
+        description: "Function does not check if payload is NULL before calling memcpy, causing segmentation fault on invalid pointer input.",
+        whyItMatters: "Direct kernel/driver crash in embedded devices upon receiving malformed telemetry packet.",
+        suggestedFix: `if (payload == NULL) return -3;`
+      },
+      {
+        id: "ISSUE-602",
+        line: 20,
+        category: "Performance",
+        severity: "Medium",
+        title: "O(n) Linear Scan for Memory Allocation",
+        description: "Iterating through an array of structs incurs cache misses. A 64-bit integer bitmask allows O(1) allocation with bitwise instructions.",
+        whyItMatters: "Reduces allocation jitter under high-throughput sensor telemetry ingestion.",
+        suggestedFix: `static uint64_t free_mask = ~0ULL; // 1 = free, 0 = used`
+      }
+    ]
+  },
+
+  // 7. C++ Review
+  {
+    id: "REV-2044",
+    project: "realtime-matching-engine",
+    repository: "org-fintech/realtime-matching-engine",
+    branch: "main",
+    file: "src/engine/order_book.cpp",
+    language: "C++",
+    date: "2026-09-06 18:20",
+    overallScore: 79,
+    status: "Attention Needed",
+    timeComplexity: "O(n²)",
+    spaceComplexity: "O(n)",
+    counts: {
+      critical: 1,
+      bugs: 1,
+      security: 0,
+      performance: 2,
+      complexity: 1,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n²)",
+      space: "O(n)",
+      timeExplanation: "Linear search followed by std::vector::erase shifts all subsequent elements, yielding O(n) per cancellation and O(n²) under batch cancel.",
+      spaceExplanation: "Dynamic order book vectors scale linearly with active quotes.",
+      bottleneckLine: 18,
+      isOptimal: false,
+      recommendedPattern: "std::unordered_map + std::list (L2 cache order book) for O(1) order cancellation.",
+      comparisonTable: [
+        { metric: "std::vector::erase", time: "O(n²)", space: "O(n)", throughput: "~2,400 cancels/sec" },
+        { metric: "Map + Doubly-Linked List", time: "O(1)", space: "O(n)", throughput: "~180,000 cancels/sec" }
+      ]
+    },
+    codeContent: `#include <iostream>
+#include <vector>
+#include <algorithm>
+
+struct Order {
+    int id;
+    double price;
+    int quantity;
+    bool is_buy;
+};
+
+class OrderBook {
+private:
+    std::vector<Order> buy_orders;
+    std::vector<Order> sell_orders;
+
+public:
+    void cancel_order(int order_id) {
+        // Inefficient: O(n) scan + O(n) element shifting on erase
+        for (auto it = buy_orders.begin(); it != buy_orders.end(); ++it) {
+            if (it->id == order_id) {
+                buy_orders.erase(it);
+                return;
+            }
+        }
+    }
+};`,
+    issues: [
+      {
+        id: "ISSUE-701",
+        line: 18,
+        category: "Complexity",
+        severity: "Critical",
+        title: "std::vector::erase Inefficiencies in High-Frequency Order Book",
+        description: "Erasing from the middle of a std::vector requires shifting all subsequent elements down in memory, which is O(n). Under high cancellations, this degrades matching latency.",
+        whyItMatters: "Breaches latency SLA during market volatility spikes.",
+        suggestedFix: `// Use unordered_map<int, list<Order>::iterator> for O(1) direct node erasure`
+      },
+      {
+        id: "ISSUE-702",
+        line: 6,
+        category: "Performance",
+        severity: "Medium",
+        title: "Floating Point Price Representation Risk",
+        description: "Using double for financial order prices introduces binary floating-point representation rounding inaccuracies.",
+        whyItMatters: "Fractional cent errors accumulate in matched volume fills.",
+        suggestedFix: `using Price = std::int64_t; // Fixed-point micro-cents (e.g. 100.50 -> 100500000)`
+      }
+    ]
+  },
+
+  // 8. Kotlin Review
+  {
+    id: "REV-2046",
+    project: "mobile-android-client",
+    repository: "org-mobile/mobile-android-client",
+    branch: "main",
+    file: "app/src/main/kotlin/com/fintech/app/AccountRepository.kt",
+    language: "Kotlin",
+    date: "2026-09-05 12:45",
+    overallScore: 90,
+    status: "Completed",
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(n)",
+    counts: {
+      critical: 0,
+      bugs: 1,
+      security: 0,
+      performance: 1,
+      complexity: 0,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n)",
+      space: "O(n)",
+      timeExplanation: "Linear search across list of cached accounts.",
+      spaceExplanation: "Keeps active user accounts in memory.",
+      bottleneckLine: 12,
+      isOptimal: true,
+      recommendedPattern: "Maintain a concurrent HashMap index for O(1) direct lookup.",
+      comparisonTable: [
+        { metric: "List scan", time: "O(n)", space: "O(n)", throughput: "~14,000 lookups/sec" },
+        { metric: "HashMap key", time: "O(1)", space: "O(n)", throughput: "~80,000 lookups/sec" }
+      ]
+    },
+    codeContent: `package com.fintech.app
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+data class UserAccount(val id: String, val balance: Double, val tier: String)
+
+class AccountRepository {
+    private val accounts = mutableListOf<UserAccount>()
+
+    suspend fun getAccountById(id: String): UserAccount? = withContext(Dispatchers.IO) {
+        // Linear O(n) lookup across in-memory cache
+        accounts.find { it.id == id }
+    }
+
+    fun addAccount(account: UserAccount) {
+        accounts.add(account)
+    }
+}`,
+    issues: [
+      {
+        id: "ISSUE-801",
+        line: 9,
+        category: "Bugs",
+        severity: "Medium",
+        title: "Thread Safety Hazard on MutableList",
+        description: "mutableListOf is not synchronized. Accessing it concurrently across background coroutines can corrupt internal state or throw ConcurrentModificationException.",
+        whyItMatters: "Produces random crashes when multiple background sync workers update accounts simultaneously.",
+        suggestedFix: `private val accounts = java.util.concurrent.ConcurrentHashMap<String, UserAccount>()`
+      }
+    ]
+  },
+
+  // 9. JavaScript Review
+  {
+    id: "REV-2045",
+    project: "web-dashboard-fe",
+    repository: "org-web/web-dashboard-fe",
+    branch: "main",
+    file: "src/analytics/dataAggregator.js",
+    language: "JavaScript",
+    date: "2026-09-04 16:30",
+    overallScore: 83,
+    status: "Attention Needed",
+    timeComplexity: "O(n²)",
+    spaceComplexity: "O(n)",
+    counts: {
+      critical: 0,
+      bugs: 1,
+      security: 0,
+      performance: 2,
+      complexity: 1,
+      quality: 1
+    },
+    complexityAnalysis: {
+      time: "O(n²)",
+      space: "O(n)",
+      timeExplanation: "events.filter with an inner events.indexOf(ev) check causes quadratic iterations over user analytics stream.",
+      spaceExplanation: "Allocates a new filtered array in memory.",
+      bottleneckLine: 5,
+      isOptimal: false,
+      recommendedPattern: "Remove redundant indexOf or use a Set for O(1) membership check.",
+      comparisonTable: [
+        { metric: "filter + indexOf", time: "O(n²)", space: "O(n)", throughput: "~650 ops/sec" },
+        { metric: "Single filter", time: "O(n)", space: "O(n)", throughput: "~28,000 ops/sec" }
+      ]
+    },
+    codeContent: `// Analytics metrics aggregator
+export function aggregateUserSessions(events, targetUserId) {
+  // Quadratic O(n²) filter with redundant inner array scan
+  const userEvents = events.filter((ev) => {
+    return ev.userId === targetUserId && events.indexOf(ev) >= 0;
+  });
+
+  const summary = {
+    totalDuration: 0,
+    pageViews: 0
+  };
+
+  userEvents.forEach(e => {
+    summary.totalDuration += (e.duration || 0);
+    summary.pageViews += 1;
+  });
+
+  return summary;
+}`,
+    issues: [
+      {
+        id: "ISSUE-901",
+        line: 5,
+        category: "Complexity",
+        severity: "Medium",
+        title: "Redundant Array.indexOf Inside Filter Predicate",
+        description: "Calling events.indexOf(ev) inside events.filter turns linear scanning into a quadratic O(n²) performance trap.",
+        whyItMatters: "On sessions with 20,000 telemetry events, this locks the main browser thread for 4.2 seconds.",
+        suggestedFix: `const userEvents = events.filter((ev) => ev.userId === targetUserId);`
+      }
+    ]
+  }
+];
+
+export const SAMPLE_PRESETS = [
+  {
+    id: "ts-order",
+    name: "TypeScript: Order Processor (Nested Loop & Null Check)",
+    language: "TypeScript",
+    fileName: "OrderProcessor.ts",
+    code: `import { Injectable, Logger } from '@nestjs/common';
+import { CustomerRepository } from '../repositories/customer.repository';
+import { OrderDto, ProcessedOrderResult } from '../dto/order.dto';
+
+@Injectable()
+export class OrderProcessor {
+  private readonly logger = new Logger(OrderProcessor.name);
+
+  constructor(private readonly customerRepo: CustomerRepository) {}
+
+  public async processOrder(order: OrderDto): Promise<ProcessedOrderResult> {
+    const customer = await this.customerRepo.findById(order.customerId);
+    this.logger.log(\`Customer status: \${customer.membershipTier}\`);
+
+    let finalTotal = 0;
+    for (let i = 0; i < order.items.length; i++) {
+      const item = order.items[i];
+      let itemDiscount = 0;
+      for (let j = 0; j < order.activeDiscounts.length; j++) {
+        const discount = order.activeDiscounts[j];
+        if (discount.applicableCategory === item.category) {
+          itemDiscount += discount.percentage;
+        }
+      }
+      finalTotal += item.price * (1 - itemDiscount) * item.quantity;
+    }
+
+    return { orderId: order.id, finalAmount: finalTotal };
+  }
+}`
+  },
+  {
+    id: "java-payment",
+    name: "Java: Payment Processor (Quadratic Match & BigDecimal)",
+    language: "Java",
+    fileName: "PaymentProcessor.java",
+    code: `package com.fintech.checkout;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+public class PaymentProcessor {
+    private final Map<String, BigDecimal> customerWallets = new HashMap<>();
+
+    public boolean processTransaction(String customerId, BigDecimal amount, List<String> discountCodes) {
+        BigDecimal discount = BigDecimal.ZERO;
+        for (String code : discountCodes) {
+            for (Map.Entry<String, BigDecimal> entry : customerWallets.entrySet()) {
+                if (entry.getKey().contains(code)) {
+                    discount = discount.add(entry.getValue().multiply(BigDecimal.valueOf(0.05)));
+                }
+            }
+        }
+        return customerWallets.containsKey(customerId);
+    }
+}`
+  },
+  {
+    id: "python-twosum",
+    name: "Python: Two Sum (Brute Force O(n²))",
+    language: "Python",
+    fileName: "two_sum.py",
+    code: `def two_sum(nums: list[int], target: int) -> list[int]:
+    """Brute force O(n²) quadratic pair scan."""
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []`
+  },
+  {
+    id: "c-buffer",
+    name: "C: Memory Buffer Pool (Bounds & Pointer Safety)",
+    language: "C",
+    fileName: "buffer_pool.c",
+    code: `#include <stdio.h>
+#include <string.h>
+
+#define MAX_BUFFERS 64
+#define BUFFER_SIZE 512
+
+typedef struct {
+    char data[BUFFER_SIZE];
+    int in_use;
+} Block;
+
+static Block pool[MAX_BUFFERS];
+
+int allocate_block(const char* payload, size_t len) {
+    for (int i = 0; i < MAX_BUFFERS; i++) {
+        if (!pool[i].in_use) {
+            pool[i].in_use = 1;
+            memcpy(pool[i].data, payload, len);
+            return i;
+        }
+    }
+    return -1;
+}`
+  },
+  {
+    id: "cpp-orderbook",
+    name: "C++: Order Book Matching (Vector Erase Latency)",
+    language: "C++",
+    fileName: "order_book.cpp",
+    code: `#include <vector>
+
+struct Order {
+    int id;
+    double price;
+};
+
+class OrderBook {
+    std::vector<Order> bids;
+public:
+    void cancel(int id) {
+        for (auto it = bids.begin(); it != bids.end(); ++it) {
+            if (it->id == id) {
+                bids.erase(it);
+                return;
+            }
+        }
+    }
+};`
+  },
+  {
+    id: "js-aggregator",
+    name: "JavaScript: Data Aggregator (filter + indexOf Trap)",
+    language: "JavaScript",
+    fileName: "dataAggregator.js",
+    code: `export function aggregateSessions(events, userId) {
+  const userEvents = events.filter(e => {
+    return e.userId === userId && events.indexOf(e) >= 0;
+  });
+
+  return userEvents.reduce((acc, curr) => acc + (curr.duration || 0), 0);
+}`
+  },
+  {
+    id: "go-verifier",
+    name: "Go: HMAC Signature Verifier (Constant-Time)",
+    language: "Go",
+    fileName: "verifier.go",
+    code: `package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"errors"
+)
+
+func Verify(token string, secret, expectedSig []byte) (bool, error) {
+	if len(token) == 0 {
+		return false, errors.New("empty token")
+	}
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(token))
+	return hmac.Equal(mac.Sum(nil), expectedSig), nil
+}`
+  },
+  {
+    id: "kotlin-repo",
+    name: "Kotlin: Coroutine Account Repository",
+    language: "Kotlin",
+    fileName: "AccountRepository.kt",
+    code: `package com.fintech.app
+
+data class Account(val id: String, val balance: Double)
+
+class AccountRepository {
+    private val accounts = mutableListOf<Account>()
+
+    fun findAccount(id: String): Account? {
+        return accounts.find { it.id == id }
+    }
+}`
+  },
+  {
+    id: "rust-ring",
+    name: "Rust: Consistent Hash Ring (BTreeMap)",
+    language: "Rust",
+    fileName: "consistent_hash.rs",
+    code: `use std::collections::BTreeMap;
+
+pub struct HashRing {
+    nodes: BTreeMap<u64, String>,
+}
+
+impl HashRing {
+    pub fn get_node(&self, key: u64) -> Option<&str> {
+        match self.nodes.range(key..).next() {
+            Some((_, node)) => Some(node.as_str()),
+            None => self.nodes.iter().next().map(|(_, n)| n.as_str()),
+        }
+    }
+}`
   }
 ];
 
@@ -472,7 +1530,7 @@ export const mockSettings = {
     connected: true,
     username: "rajesh-panwar",
     accountType: "Organization Member",
-    linkedRepositories: 6,
+    linkedRepositories: 8,
     lastSynced: "Today, 10:20 AM"
   },
   preferences: {

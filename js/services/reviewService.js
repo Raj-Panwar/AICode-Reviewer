@@ -18,7 +18,17 @@ export const reviewService = {
    */
   async getReviews(filters = {}) {
     await apiClient.get('/api/reviews', filters);
-    let results = [...mockReviews];
+    let stored = [];
+    try {
+      const saved = sessionStorage.getItem('custom_reviews');
+      if (saved) {
+        stored = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('SessionStorage read error:', e);
+    }
+
+    let results = [...stored, ...mockReviews];
 
     if (filters.search) {
       const q = filters.search.toLowerCase();
@@ -47,6 +57,13 @@ export const reviewService = {
    */
   async getReviewById(id) {
     await apiClient.get(`/api/reviews/${id}`);
+    try {
+      const saved = sessionStorage.getItem(`review_${id}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('SessionStorage lookup error:', e);
+    }
+
     const found = mockReviews.find((r) => r.id === id);
     if (!found) {
       // Return primary featured review as fallback
@@ -86,20 +103,76 @@ export const reviewService = {
     // Call simulated POST endpoint
     await apiClient.post('/api/reviews/analyze', submissionData);
 
-    // Generate new review ID
-    const newId = `REV-${Math.floor(2050 + Math.random() * 50)}`;
-    const newReview = {
-      ...mockReviews[0],
-      id: newId,
-      project: submissionData.fileName || "Submitted Analysis",
-      file: submissionData.fileName || "src/review.ts",
-      language: submissionData.language || "TypeScript",
-      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      overallScore: Math.floor(82 + Math.random() * 12)
-    };
+    // Select the base mock review template matching the submitted language
+    const targetLang = (submissionData.language || 'TypeScript').toLowerCase();
+    const template =
+      mockReviews.find((r) => r.language.toLowerCase() === targetLang) ||
+      mockReviews[0];
 
-    // Store in mock memory
+    // Deep clone template to avoid mutating base mock data
+    const newReview = JSON.parse(JSON.stringify(template));
+    const newId = `REV-${Math.floor(2050 + Math.random() * 50)}`;
+
+    newReview.id = newId;
+    newReview.language = submissionData.language || template.language;
+    newReview.file = submissionData.fileName || template.file;
+    newReview.repository =
+      submissionData.repository ||
+      (submissionData.source === 'repository'
+        ? submissionData.repository
+        : 'local-workspace');
+    newReview.branch = submissionData.branch || 'main';
+    newReview.project = submissionData.fileName
+      ? submissionData.fileName.replace(/\.[^/.]+$/, '')
+      : (submissionData.repository || template.project);
+    newReview.date = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    // If user provided code, bind it and evaluate basic structural signals
+    if (submissionData.code && submissionData.code.trim().length > 0) {
+      newReview.codeContent = submissionData.code;
+
+      const code = submissionData.code;
+      const hasNestedLoops =
+        /(for|while)[^{]*\{[\s\S]*?(for|while)/.test(code) ||
+        /(for|while)[^:]*:[\s\S]*?(for|while)/.test(code) ||
+        /\.filter\([\s\S]*?\.indexOf\(/.test(code);
+
+      const hasBinarySearch =
+        /while\s*\([^)]*<=\s*[^)]*\)/.test(code) && /mid/.test(code);
+
+      const hasSingleLoop =
+        /(for|while|forEach|filter|map)\b/.test(code);
+
+      if (hasNestedLoops) {
+        newReview.timeComplexity = 'O(n²)';
+        if (newReview.complexityAnalysis) {
+          newReview.complexityAnalysis.time = 'O(n²)';
+          newReview.complexityAnalysis.isOptimal = false;
+        }
+      } else if (hasBinarySearch) {
+        newReview.timeComplexity = 'O(log n)';
+        if (newReview.complexityAnalysis) {
+          newReview.complexityAnalysis.time = 'O(log n)';
+          newReview.complexityAnalysis.isOptimal = true;
+        }
+      } else if (hasSingleLoop) {
+        newReview.timeComplexity = 'O(n)';
+        if (newReview.complexityAnalysis) {
+          newReview.complexityAnalysis.time = 'O(n)';
+        }
+      }
+    }
+
+    // Store in mock memory and sessionStorage for cross-page persistence
     mockReviews.unshift(newReview);
+    try {
+      sessionStorage.setItem(`review_${newId}`, JSON.stringify(newReview));
+      const existingCustom = JSON.parse(sessionStorage.getItem('custom_reviews') || '[]');
+      existingCustom.unshift(newReview);
+      sessionStorage.setItem('custom_reviews', JSON.stringify(existingCustom.slice(0, 20)));
+    } catch (e) {
+      console.warn('Failed to persist review to sessionStorage:', e);
+    }
     return newReview;
   },
 

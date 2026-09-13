@@ -50,8 +50,31 @@ function initFormHandlers() {
   const disconnectBtn = document.getElementById('disconnectGithubBtn');
   if (disconnectBtn) {
     disconnectBtn.addEventListener('click', () => {
-      if (confirm('Disconnect GitHub account? New commits will not trigger automatic reviews.')) {
-        alert('GitHub disconnected successfully.');
+      const isConnected = disconnectBtn.textContent.trim() === 'Disconnect';
+      if (isConnected) {
+        disconnectBtn.textContent = 'Connect GitHub';
+        disconnectBtn.style.color = 'var(--teal-700)';
+        if (toast) {
+          toast.textContent = '✓ GitHub account disconnected.';
+          toast.style.display = 'block';
+          toast.style.opacity = '1';
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => (toast.style.display = 'none'), 300);
+          }, 3000);
+        }
+      } else {
+        disconnectBtn.textContent = 'Disconnect';
+        disconnectBtn.style.color = 'var(--red-600)';
+        if (toast) {
+          toast.textContent = '✓ GitHub account connected.';
+          toast.style.display = 'block';
+          toast.style.opacity = '1';
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => (toast.style.display = 'none'), 300);
+          }, 3000);
+        }
       }
     });
   }

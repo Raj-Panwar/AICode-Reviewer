@@ -67,7 +67,7 @@ async function loadReviewsList(filters = {}, sortBy = 'date-desc') {
     if (reviews.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+          <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
             No code reviews match the chosen criteria.
           </td>
         </tr>
