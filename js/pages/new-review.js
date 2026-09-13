@@ -125,7 +125,7 @@ function initWorkflowSwitchers() {
  * Synchronize language selectors across the page
  */
 function initLanguageSelectors() {
-  const pasteLangSelect = document.getElementById('pasteLanguageSelect');
+  const pasteLangSelect = document.getElementById('pasteLanguageSelect') || document.getElementById('pasteLanguage');
   const uploadLangSelect = document.getElementById('uploadLanguageSelect');
 
   function populateSelect(selectEl) {
@@ -174,7 +174,7 @@ function initLanguageSelectors() {
 }
 
 function updateLanguageInUI(newLang) {
-  const pasteLangSelect = document.getElementById('pasteLanguageSelect');
+  const pasteLangSelect = document.getElementById('pasteLanguageSelect') || document.getElementById('pasteLanguage');
   const uploadLangSelect = document.getElementById('uploadLanguageSelect');
   const activeLangTag = document.getElementById('activeLangTag');
 
@@ -468,7 +468,7 @@ async function initRepositoryConnection() {
  * Load Sample Snippets
  */
 function initSampleSnippets() {
-  const sampleSelect = document.getElementById('sampleProblemSelect');
+  const sampleSelect = document.getElementById('sampleProblemSelect') || document.getElementById('samplePresetSelect');
   if (!sampleSelect) return;
 
   sampleSelect.addEventListener('change', (e) => {
@@ -477,9 +477,17 @@ function initSampleSnippets() {
 
     const sampleMap = {
       'java-twosum': { lang: 'Java', file: 'TwoSum.java' },
+      'java-payment': { lang: 'Java', file: 'PaymentProcessor.java' },
+      'python-twosum': { lang: 'Python', file: 'two_sum.py' },
       'python-bubblesort': { lang: 'Python', file: 'bubble_sort.py' },
       'ts-order': { lang: 'TypeScript', file: 'OrderProcessor.ts' },
-      'go-buffer': { lang: 'Go', file: 'buffer_pool.go' }
+      'c-buffer': { lang: 'C', file: 'buffer_pool.c' },
+      'cpp-orderbook': { lang: 'C++', file: 'order_book.cpp' },
+      'js-aggregator': { lang: 'JavaScript', file: 'aggregator.js' },
+      'go-buffer': { lang: 'Go', file: 'buffer_pool.go' },
+      'go-verifier': { lang: 'Go', file: 'verifier.go' },
+      'kotlin-repo': { lang: 'Kotlin', file: 'AccountRepo.kt' },
+      'rust-ring': { lang: 'Rust', file: 'hash_ring.rs' }
     };
 
     const target = sampleMap[key];
@@ -502,15 +510,17 @@ function initSampleSnippets() {
  */
 function initFormSubmission() {
   const startBtn = document.getElementById('startReviewBtn');
+  const configStartBtn = document.getElementById('startReviewConfigBtn');
   const modalBackdrop = document.getElementById('analysisModal');
   const stepItems = document.querySelectorAll('.analysis-step-item');
   const currentStepText = document.getElementById('currentStepText');
   const errorContainer = document.getElementById('submitErrorContainer');
   const retryBtn = document.getElementById('analysisRetryBtn');
 
-  if (!startBtn || !modalBackdrop) return;
+  if (!startBtn && !configStartBtn) return;
+  if (!modalBackdrop) return;
 
-  startBtn.addEventListener('click', async () => {
+  const handleReviewSubmission = async () => {
     if (errorContainer) errorContainer.style.display = 'none';
 
     const currentLang = languageState.getLanguage();
@@ -527,7 +537,14 @@ function initFormSubmission() {
 
     if (activeWorkflow === 'writeCode') {
       submission.source = 'editor';
-      submission.fileName = document.getElementById('pasteFileName')?.value.trim() || languageState.getDefaultFileName(currentLang);
+      const fileNameInput = document.getElementById('pasteFileName');
+      const fileNameVal = fileNameInput ? fileNameInput.value.trim() : '';
+      if (!fileNameVal) {
+        alert('Please enter a valid file name before starting review (e.g. Solution.java, Service.ts).');
+        if (fileNameInput) fileNameInput.focus();
+        return;
+      }
+      submission.fileName = fileNameVal;
       submission.code = document.getElementById('pasteCodeArea')?.value || '';
     } else if (activeWorkflow === 'addFile') {
       submission.source = 'file';
@@ -606,13 +623,19 @@ function initFormSubmission() {
           </div>
         `;
         errorContainer.style.display = 'block';
-        document.getElementById('retryAnalysisBtn')?.addEventListener('click', () => startBtn.click());
+        document.getElementById('retryAnalysisBtn')?.addEventListener('click', handleReviewSubmission);
       }
     }
-  });
+  };
 
+  if (startBtn) {
+    startBtn.addEventListener('click', handleReviewSubmission);
+  }
+  if (configStartBtn) {
+    configStartBtn.addEventListener('click', handleReviewSubmission);
+  }
   if (retryBtn) {
-    retryBtn.addEventListener('click', () => startBtn.click());
+    retryBtn.addEventListener('click', handleReviewSubmission);
   }
 }
 
