@@ -212,22 +212,59 @@
             </div>
           </div>
 
-          <!-- Section 4: Spring Boot REST API Endpoint -->
-          <div class="card" style="margin-bottom: 24px;">
+          <!-- Section 4: API Mode & Backend Architecture Configuration -->
+          <div class="card" style="margin-bottom: 24px;" id="apiModeConfigCard">
             <div class="card-header">
               <div>
-                <h2 class="card-title">Spring Boot REST Backend API</h2>
-                <div class="card-subtitle">Architecture: Frontend → Spring Boot REST API → Gemini AI</div>
+                <h2 class="card-title">API Operational Mode & Backend Routing</h2>
+                <div class="card-subtitle">Single source of truth for frontend API routing (Mock vs. Spring Boot)</div>
               </div>
-              <span class="badge" id="apiStatusBadge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
-                Local / Fallback Mode
+              <span class="badge" id="apiStatusBadge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700;">
+                MOCK MODE (Active)
               </span>
             </div>
 
             <div class="card-body">
-              <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Mode Selection -->
                 <div>
-                  <label class="form-label" for="settingApiBaseUrl">Backend Base URL</label>
+                  <label class="form-label" style="margin-bottom: 10px;">Select Active API Mode</label>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                    <!-- Option 1: Mock Mode -->
+                    <label id="modeCardMock" style="display: block; cursor: pointer; border: 2px solid var(--teal-600); background: var(--teal-50); border-radius: var(--radius-md); padding: 16px; transition: all 0.2s ease;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-weight: 700; font-size: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                          <input type="radio" name="apiModeRadio" id="apiModeRadioMock" value="mock" checked style="accent-color: var(--teal-600); width: 16px; height: 16px;" />
+                          Mock Mode (Default)
+                        </span>
+                        <span class="badge" style="background: #d1fae5; color: #065f46; font-size: 11px;">Standalone</span>
+                      </div>
+                      <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                        Full client-side simulation. No Spring Boot or Gemini API needed. Never attempts to connect to localhost:8080.
+                      </p>
+                    </label>
+
+                    <!-- Option 2: Real Mode -->
+                    <label id="modeCardReal" style="display: block; cursor: pointer; border: 1px solid var(--border-light); background: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; transition: all 0.2s ease;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-weight: 700; font-size: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                          <input type="radio" name="apiModeRadio" id="apiModeRadioReal" value="real" style="accent-color: var(--teal-600); width: 16px; height: 16px;" />
+                          Real Backend Mode
+                        </span>
+                        <span class="badge" style="background: #eff6ff; color: #1e40af; font-size: 11px;">Spring Boot</span>
+                      </div>
+                      <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                        Routes requests to the Spring Boot REST API at localhost:8080, which securely orchestrates Gemini AI server-side.
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-light); margin: 0;" />
+
+                <!-- Backend Base URL -->
+                <div>
+                  <label class="form-label" for="settingApiBaseUrl">Centralized Backend URL (For Real API Mode)</label>
                   <div style="display: flex; gap: 10px; max-width: 600px;">
                     <input
                       type="text"
@@ -241,7 +278,40 @@
                     </button>
                   </div>
                   <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">
-                    Defaults to Spring Boot local dev server (<code>http://localhost:8080</code>). When offline, the frontend seamlessly uses local fallback datasets.
+                    In Mock Mode, this URL is <strong>never called</strong>. In Real Mode, requests target this base URL.
+                  </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-light); margin: 0;" />
+
+                <!-- Mock Mode Developer Controls -->
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                    Developer Mock Testing Controls
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                    <div>
+                      <label class="form-label" for="settingMockDelay">Simulated Network Latency</label>
+                      <select id="settingMockDelay" class="form-control">
+                        <option value="50">Fast (50 ms)</option>
+                        <option value="350" selected>Realistic (350 ms - Recommended)</option>
+                        <option value="800">Slow 3G Simulation (800 ms)</option>
+                      </select>
+                      <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+                        Allows testing multi-stage loading modals and UI transitions.
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="form-label" for="settingSimulateError">Simulate Mock API Error</label>
+                      <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">
+                        <input type="checkbox" id="settingSimulateError" style="accent-color: var(--teal-600); width: 18px; height: 18px;" />
+                        <span style="font-size: 13px; color: var(--text-secondary); font-weight: 600;">Trigger 500 Internal Error (For UI error testing)</span>
+                      </label>
+                      <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+                        Disabled by default. When checked, mock API simulates failure states.
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

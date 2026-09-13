@@ -12,6 +12,7 @@
 
 import { reviewService } from '../reviewService.js';
 import { repositoryService } from '../repositoryService.js';
+import { apiClient } from '../api.js';
 import {
   languageState,
   SUPPORTED_LANGUAGES,
@@ -591,11 +592,15 @@ function initFormSubmission() {
       console.error('Analysis execution failed:', err);
       modalBackdrop.classList.remove('active');
       if (errorContainer) {
+        const errorMsg = apiClient.isMockMode()
+          ? `Mock analysis simulation error: ${err.message || 'Check developer simulation controls in Settings.'}`
+          : `Unable to connect to the Spring Boot review backend at ${apiClient.getBaseUrl()}. Please ensure the backend is active or switch to Mock Mode in Settings.`;
+
         errorContainer.innerHTML = `
           <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 16px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between;">
             <div>
               <div style="font-weight: 700; color: #991b1b; font-size: 14px;">Review Service Notice</div>
-              <div style="font-size: 13px; color: #b91c1c;">Unable to connect to the Spring Boot review backend at ${apiClient.getBaseUrl()}. Please ensure the backend is active or check settings.</div>
+              <div style="font-size: 13px; color: #b91c1c;">${escapeHtml(errorMsg)}</div>
             </div>
             <button type="button" class="btn btn-secondary btn-sm" id="retryAnalysisBtn">Retry</button>
           </div>

@@ -42,10 +42,12 @@ Traditional static analyzers and linters enforce style conventions and detect kn
 ## 3. Key Features
 
 ### Implemented Features (Current Frontend State)
+- **Frontend API Mode Switcher & Mock Engine (`mockApi.js`)**: Built-in, standalone mock mode active by default. Simulates network latency and endpoint routing entirely client-side, requiring zero backend services or Gemini API keys. Guaranteed zero `localhost:8080` connection errors during Live Server testing.
+- **Developer Simulation Controls**: Configurable simulated network latency (50ms, 350ms, 800ms) and an intentional API error simulation toggle in Settings for comprehensive UI testing.
 - **Interactive Code Editor ("Write Code")**: In-browser monospace editor featuring real-time line numbering, code indentation, language indicators, quick-copy, buffer clearing, and automatic starter template injection.
 - **Multi-Format File Uploader ("Add File")**: Drag-and-drop file ingestion supporting manual file selection, file extension auto-detection, code previewing, and file size guardrails ($< 2\text{ MB}$).
 - **Repository Explorer Mock ("Connect Repository")**: Multi-tier repository navigation allowing branch selection (`main`, `develop`, `feat/auth`) and file tree browsing with source preview before review initiation.
-- **Synchronized Multi-Language Engine**: Centralized language state supporting 9 programming languages with automatic filename inference and starter boilerplate.
+- **Synchronized Multi-Language Engine**: Centralized language state supporting 9 programming languages with automatic filename inference, starter boilerplate, and context-aware issue synthesis.
 - **Code Health Scoring**: Holistic diagnostic score ($0 - 100$) reflecting overall code quality, accompanied by health status badges (e.g., *Production Ready*, *Attention Needed*).
 - **Categorized Issue Detection**: Granular issue identification classified by severity (*Critical*, *High*, *Medium*, *Low*, *Info*) and category (*Bug*, *Security*, *Performance*, *Maintainability*, *Code Style*, *Best Practice*), complete with line references and "Why It Matters" explanations.
 - **Estimated Algorithmic Complexity**: Asymptotic Time and Space complexity evaluation, bottleneck isolation, and optimization feasibility checks.
@@ -56,7 +58,7 @@ Traditional static analyzers and linters enforce style conventions and detect kn
 - **Review History & Search**: Searchable, multi-attribute filterable archive of past reviews with sortable columns and direct report links.
 - **Developer Metrics Dashboard**: High-level statistical cards summarizing total reviews, average quality score, detected bugs, security alerts, and language distribution.
 - **Repository Health Manager**: Overview of monitored repositories showing health scores, open defects, and quick-analysis triggers.
-- **Spring Boot API Client & Local Fallback**: Dynamic REST client capable of targeting an external backend (`http://localhost:8080`) while gracefully degrading to local JSON fixtures when running standalone.
+- **Unified API Client (`apiClient`)**: Centralized transport layer with a single toggle (`API_MODE = 'mock' | 'real'`), routing cleanly to `mockApi.js` or Spring Boot.
 - **Session Persistence**: Client-side `sessionStorage` caching enabling instant review inspection immediately after submission without requiring database roundtrips.
 
 ### Planned Features (Target Architecture)
@@ -123,14 +125,20 @@ flowchart TD
     ShowError --> ChooseMethod
 
     ValidateInput -->|Valid| TriggerModal[Open Multi-Stage Analysis Modal]
-    TriggerModal --> DispatchService[reviewService.analyzeCode Payload]
+    TriggerModal --> DispatchService[reviewService.runAnalysis Payload]
 
-    subgraph ProcessingPipeline [Analysis Execution]
-        DispatchService --> CheckBackend{Backend Reachable?}
-        CheckBackend -->|Yes| CallSpringBoot[POST /api/reviews/analyze]
-        CheckBackend -->|No / Offline| UseLocalMock[Load Local JSON Mock & Fallback]
-        CallSpringBoot --> StoreSession[Store Review in sessionStorage]
-        UseLocalMock --> StoreSession
+    subgraph ProcessingPipeline [Analysis Execution & API Mode Routing]
+        DispatchService --> CheckMode{Check API_MODE in apiClient}
+        CheckMode -->|API_MODE = 'mock' (Default)| MockRoute[mockApi.analyzeCode]
+        MockRoute --> MockLatency[Simulate Latency 350ms]
+        MockLatency --> MockGen[Synthesize Language-Specific Review]
+        MockGen --> ReturnResult[Return Standard Review Payload]
+
+        CheckMode -->|API_MODE = 'real'| RealRoute[POST http://localhost:8080/api/reviews/analyze]
+        RealRoute --> SpringBootBackend[Spring Boot REST Backend]
+        SpringBootBackend --> ReturnResult
+
+        ReturnResult --> StoreSession[Store Review in sessionStorage]
     end
 
     StoreSession --> NavigateReview[Redirect to review.html?id=...]
@@ -154,24 +162,34 @@ The AI Code Reviewer is designed around an enterprise-grade, decoupled tier arch
 
 ```mermaid
 flowchart TB
-    subgraph ClientTier [Frontend Client - Implemented]
+    subgraph ClientTier [Frontend Client Architecture - Implemented]
         Browser[User Web Browser]
         HTMLViews[HTML5 Views - /html/*.html]
         Controllers[Page Controllers - /js/pages/*.js]
         State[Language & Filter State - js/languageState.js]
         DomainServices[Domain Services - reviewService.js & repositoryService.js]
-        ApiClient[API Client Layer - js/api.js]
-        LocalFallback[Local JSON Mock Datasets - /json/*.json]
-
+        ApiClient[Unified API Client - js/api.js]
+        
         Browser --> HTMLViews
         HTMLViews --> Controllers
         Controllers --> State
         Controllers --> DomainServices
         DomainServices --> ApiClient
-        DomainServices -.->|Fallback if Offline| LocalFallback
     end
 
-    subgraph BackendTier [Spring Boot Backend - Planned Architecture]
+    subgraph MockTier [Default Mode: Pure Client-Side Mock Layer - Implemented]
+        MockRouter[Mock API Router - js/mockApi.js]
+        LatencySim[Latency Simulator 350ms]
+        LanguageSynthesizer[Context-Aware Review Synthesizer - 9 Languages]
+        JSONFixtures[(Static Mock Datasets - /json/*.json)]
+
+        ApiClient -->|When API_MODE = 'mock' (Default)| MockRouter
+        MockRouter --> LatencySim
+        MockRouter --> LanguageSynthesizer
+        MockRouter --> JSONFixtures
+    end
+
+    subgraph BackendTier [Future Real Mode: Spring Boot Backend - Planned]
         RestControllers[REST Controllers - /api/reviews, /api/dashboard]
         SecurityFilter[Security & CORS Filter]
         ServiceLayer[ReviewService & ComplexityService]
@@ -179,7 +197,7 @@ flowchart TB
         StaticAnalyzer[Deterministic AST / Static Analysis Pass]
         RepoLayer[Spring Data JPA Repositories]
 
-        ApiClient -->|HTTP REST / JSON| RestControllers
+        ApiClient -->|When API_MODE = 'real'| RestControllers
         RestControllers --> SecurityFilter
         SecurityFilter --> ServiceLayer
         ServiceLayer --> StaticAnalyzer
@@ -187,10 +205,10 @@ flowchart TB
         ServiceLayer --> RepoLayer
     end
 
-    subgraph ExternalServices [External Integrations & Persistence - Planned]
+    subgraph ExternalServices [External Integrations - Planned]
         GeminiAPI[Google Gemini 2.5 API - Server-to-Server]
         GitHubAPI[GitHub REST & GraphQL API]
-        Database[(Relational Database - MySQL / PostgreSQL)]
+        Database[(Relational Database - PostgreSQL / MySQL)]
 
         GeminiProxy -->|Secure SDK / Bearer Token| GeminiAPI
         ServiceLayer -->|OAuth2 App Tokens| GitHubAPI
@@ -201,7 +219,7 @@ flowchart TB
     classDef planned fill:#1e293b,stroke:#475569,color:#e2e8f0,stroke-dasharray: 5 5;
     classDef external fill:#334155,stroke:#64748b,color:#f8fafc;
 
-    class Browser,HTMLViews,Controllers,State,DomainServices,ApiClient,LocalFallback implemented;
+    class Browser,HTMLViews,Controllers,State,DomainServices,ApiClient,MockRouter,LatencySim,LanguageSynthesizer,JSONFixtures implemented;
     class RestControllers,SecurityFilter,ServiceLayer,GeminiProxy,StaticAnalyzer,RepoLayer planned;
     class GeminiAPI,GitHubAPI,Database external;
 ```
@@ -235,14 +253,21 @@ AICode-Reviewer/
 │   ├── repositories.html       # Monitored GitHub repository health management
 │   ├── review.html             # Detailed diagnostic review report & interactive code viewer
 │   ├── reviews.html            # Searchable and filterable past reviews catalog
-│   └── settings.html           # Developer preferences, GitHub tokens, and API base URL config
+│   └── settings.html           # Developer preferences, API Mode switcher, and testing controls
 │
 ├── js/                         # Application JavaScript layer
-│   ├── api.js                  # Central HTTP transport client with timeout & error handling
+│   ├── api.js                  # Central HTTP transport client with API Mode switcher ('mock' | 'real')
 │   ├── app.js                  # Application shell (mobile nav, active link highlight, search)
 │   ├── languageState.js        # Global singleton managing the 9 supported languages
+│   ├── mockApi.js              # Standalone Mock API router, review synthesizer & latency simulator
 │   ├── repositoryService.js    # Repository data retrieval and management logic
 │   ├── reviewService.js        # Review submission, calculation, and session persistence logic
+│   │
+│   ├── services/               # Re-export aliases for standard service path resolution
+│   │   ├── api.js              # Re-export of ../api.js
+│   │   ├── mockApi.js          # Re-export of ../mockApi.js
+│   │   ├── repositoryService.js# Re-export of ../repositoryService.js
+│   │   └── reviewService.js    # Re-export of ../reviewService.js
 │   │
 │   └── pages/                  # Page-specific DOM controllers
 │       ├── complexity.js       # Complexity page charts, filters, and code comparisons
@@ -251,10 +276,10 @@ AICode-Reviewer/
 │       ├── repositories.js     # Repository listing, health scores, and connection modal
 │       ├── review.js           # Review report renderer, line issue markers, code copy
 │       ├── reviews.js          # Review history table, filters, sorting, and pagination
-│       └── settings.js         # Settings form, local storage saving, API connection ping
+│       └── settings.js         # Settings form, API Mode toggle, latency slider, error simulation
 │
 ├── json/                       # Centralized JSON datasets and fallback fixtures
-│   ├── config.json             # System-level application configuration & defaults
+│   ├── config.json             # System-level application configuration (apiMode: "mock", etc.)
 │   ├── mock-complexity.json    # Algorithmic complexity library datasets
 │   ├── mock-repositories.json  # Mock repository catalog with health scores
 │   ├── mock-reviews.json       # Historical review records with full issue payloads
@@ -267,17 +292,39 @@ AICode-Reviewer/
 
 ---
 
-## 8. Frontend Architecture
+## 8. Frontend Architecture & API Mode System
 
 The frontend uses **Vanilla JavaScript (ES Modules)**, structured to deliver modern Single-Page Application responsiveness without framework bloat.
 
-### Architectural Layers
+### 8.1 API Mode System (`mock` vs. `real`)
+
+The application features a centralized API Mode switch in `js/api.js`:
+
+```javascript
+// Central configuration point in js/api.js
+let API_MODE = localStorage.getItem('api_mode') || 'mock'; // Default: "mock"
+let API_BASE_URL = localStorage.getItem('api_base_url') || 'http://localhost:8080';
+```
+
+#### Dual-Mode Comparison
+
+| Capability | Mock Mode (`API_MODE = "mock"`) **[DEFAULT]** | Real Mode (`API_MODE = "real"`) **[FUTURE BACKEND]** |
+| :--- | :--- | :--- |
+| **Backend Required** | ❌ No backend needed | ✅ Spring Boot server running at `localhost:8080` |
+| **Gemini API Key Required**| ❌ No API key needed | ✅ Gemini API key configured on Spring Boot server |
+| **Live Server Compatibility**| ✅ 100% works out of the box with zero setup | ⚠️ Requires Spring Boot backend to be running |
+| **Network Requests to 8080**| ❌ ZERO calls to `localhost:8080` (no connection errors) | ✅ Standard REST calls to `http://localhost:8080` |
+| **Data Generation** | Dynamic, language-tailored synthesis via `mockApi.js` | Gemini 2.5 AI model via Spring Boot orchestrator |
+| **How to Activate** | Active by default on first load | Select "Real Backend Mode" in Settings or call `apiClient.setMode('real')` |
+
+### 8.2 Architectural Layers
 1. **Markup Layer (`/html/`)**: Semantic HTML5 templates containing unique element IDs for DOM binding.
 2. **Styling Layer (`/css/`)**: Token-driven CSS with zero inline styles, leveraging CSS variables for color tokens, border radiuses, and typographic scales.
 3. **State Management (`js/languageState.js`)**: A singleton state store maintaining the active programming language across all tabs and views.
-4. **Transport Layer (`js/api.js`)**: Encapsulates `fetch` requests with configurable base URLs (`http://localhost:8080`), default headers, timeout handling via `AbortController`, and normalized error responses.
-5. **Domain Service Layer (`js/reviewService.js`, `js/repositoryService.js`)**: Implements business rules, local storage sync, and graceful degradation fallback to `/json/` fixtures when the backend is offline.
-6. **Controller Layer (`js/pages/*.js`)**: Lightweight DOM controllers responsible strictly for event listening, data binding, and DOM updates.
+4. **Transport Layer (`js/api.js`)**: Single entry point that routes calls to `mockApi.js` (in mock mode) or `fetch()` (in real mode).
+5. **Mock Routing Layer (`js/mockApi.js`)**: Simulates network delay, validates schemas, synthesizes reviews across all 9 languages, and serves mock data without any network requests.
+6. **Domain Service Layer (`js/reviewService.js`, `js/repositoryService.js`)**: Implements business rules and local session persistence. Caller code does not know or care whether Mock or Real mode is active.
+7. **Controller Layer (`js/pages/*.js`)**: Lightweight DOM controllers responsible strictly for event listening, data binding, and DOM updates.
 
 ```mermaid
 flowchart TD
@@ -836,15 +883,25 @@ The application provides user-friendly error boundaries and recovery options for
 
 ---
 
-## 21. Installation and Setup
+## 21. Installation, Setup & Testing
 
-Follow these instructions to run the frontend application locally:
+The AI Code Reviewer frontend is completely decoupled and supports two distinct development workflows: **Standalone Mock Mode** (instant testing via Live Server with zero dependencies) and **Node.js / Vite Tooling**.
 
-### Prerequisites
-- **Node.js**: Version `18.0.0` or higher
-- **npm** or **bun**: Package manager
+### Option A: Instant Testing with VS Code Live Server (Zero Installation)
 
-### Step-by-Step Setup
+Because the application is built strictly with modern Vanilla HTML5, CSS3, and native ES Modules, you can run and test the complete application immediately without Node.js or any backend services:
+
+1. Open the project folder in **Visual Studio Code**.
+2. Install the **Live Server** extension (by Ritwick Dey) if not already installed.
+3. Right-click `html/index.html` (or `html/new-review.html`) and select **"Open with Live Server"**.
+4. The application opens in your browser at `http://127.0.0.1:5500/html/index.html`.
+
+> [!NOTE]
+> **Zero Connection Errors**: The application automatically starts in **Mock Mode** (`API_MODE = "mock"`). All code analysis, repository browsing, review history, and complexity guides run entirely through `mockApi.js`. The browser will **never attempt to call `localhost:8080`**, ensuring a clean browser console with zero connection errors.
+
+### Option B: Node.js & Vite Development Server
+
+If developing with Vite build tooling:
 
 1. **Clone the Repository**:
    ```bash
@@ -857,28 +914,48 @@ Follow these instructions to run the frontend application locally:
    npm install
    ```
 
-3. **Configure Environment (Optional for Frontend Development)**:
-   Copy the example environment file if developing with environment-specific tooling:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Launch the Development Server**:
+3. **Launch the Development Server**:
    ```bash
    npm run dev
    ```
-   The application will start on `http://localhost:3000` (or the next available port).
+   The application will start on `http://localhost:3000`.
 
-5. **Build for Production**:
+4. **Build for Production**:
    ```bash
    npm run build
    ```
-   The compiled assets will be output to the `dist/` directory.
+   Outputs fully bundled static HTML, CSS, and JS to the `dist/` directory.
 
-6. **Preview Production Build Locally**:
-   ```bash
-   npm run preview
-   ```
+### Testing the Application in Mock Mode
+
+Verify all core user journeys without a backend:
+
+1. **New Review Workflow**:
+   - Navigate to `new-review.html`.
+   - Select **Write Code**: Switch languages (e.g., Python, Go, Rust, Java). Notice how the filename extension and starter template update dynamically.
+   - Click **Start Code Review**: Watch the multi-stage progress modal advance through the 4 analysis stages (~1.2s total).
+   - Verify redirection to `review.html?id=...` with score, detected issues, complexity analysis, recommendations, and optimized code in that exact language.
+   - Test **Add File** and **Connect Repository** workflows.
+2. **Review History & Sorting**:
+   - Navigate to `reviews.html`.
+   - Test filtering by language and status, and test sorting by *Highest Quality Score*, *Lowest Quality Score*, or *Most Issues*.
+3. **Complexity Analysis**:
+   - Navigate to `complexity.html` and interact with the Big-O scale and case study comparisons.
+4. **Developer Simulation Controls (Settings)**:
+   - Navigate to `settings.html`.
+   - Switch simulated latency between 50ms, 350ms, and 800ms.
+   - Toggle "Simulate Mock API Error" to test error boundary UI handling.
+
+### Transitioning to the Future Spring Boot Backend
+
+When your Spring Boot REST backend is ready:
+
+1. Start your Spring Boot service on `http://localhost:8080`. Ensure it includes CORS headers permitting your frontend origin.
+2. Open **Settings** (`settings.html`) in the application.
+3. In **API Operational Mode & Backend Routing**, select **Real Backend Mode (Spring Boot)**.
+4. Click **Test Connection**: The frontend will ping `http://localhost:8080/api/health`.
+5. Click **Save Changes**: The application will persist `API_MODE = "real"` to `localStorage`. From this point forward, all API calls are dispatched directly to Spring Boot at `http://localhost:8080`.
+6. You can switch back to **Mock Mode** at any time with a single click in Settings.
 
 ---
 

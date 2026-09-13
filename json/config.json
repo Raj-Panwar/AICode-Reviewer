@@ -1,7 +1,21 @@
 {
+  "apiMode": "mock",
   "apiBaseUrl": "http://localhost:8080",
+  "mockNetworkDelayMs": 350,
+  "mockSimulateError": false,
   "timeoutMs": 15000,
   "environment": "development",
   "appName": "AI Code Reviewer",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "supportedLanguages": [
+    "Java",
+    "Python",
+    "C",
+    "C++",
+    "JavaScript",
+    "TypeScript",
+    "Go",
+    "Kotlin",
+    "Rust"
+  ]
 }

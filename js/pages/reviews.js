@@ -1,9 +1,11 @@
 /**
  * AI Code Reviewer - Reviews History Controller
  *
- * Displays previous reviews with dynamic filtering by:
+ * Displays previous reviews with dynamic filtering and sorting by:
  *   - Language (Java, Python, C, C++, JavaScript, TypeScript, Go, Kotlin, Rust)
- *   - Review status
+ *   - Status (All, Completed, Attention Needed)
+ *   - Score (Highest First, Lowest First)
+ *   - Date and Issue counts
  *   - Keyword search across project, repository, and file names
  */
 
@@ -13,7 +15,8 @@ import { SUPPORTED_LANGUAGES } from '../languageState.js';
 let activeFilters = {
   language: 'ALL',
   status: 'ALL',
-  search: ''
+  search: '',
+  sort: 'date-desc'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -38,6 +41,7 @@ function initLanguageFilterOptions() {
 function initFilterControls() {
   const langSelect = document.getElementById('reviewsLangFilter') || document.getElementById('reviewLangFilter');
   const statusSelect = document.getElementById('reviewsStatusFilter') || document.getElementById('reviewStatusFilter');
+  const sortSelect = document.getElementById('reviewsSortSelect');
   const searchInput = document.getElementById('reviewsSearchInput');
 
   if (langSelect) {
@@ -54,6 +58,13 @@ function initFilterControls() {
     });
   }
 
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      activeFilters.sort = e.target.value;
+      loadReviews();
+    });
+  }
+
   if (searchInput) {
     let debounceTimer;
     searchInput.addEventListener('input', (e) => {
@@ -61,7 +72,7 @@ function initFilterControls() {
       debounceTimer = setTimeout(() => {
         activeFilters.search = e.target.value.trim();
         loadReviews();
-      }, 250);
+      }, 200);
     });
   }
 }
@@ -72,7 +83,20 @@ async function loadReviews() {
   if (!tableBody) return;
 
   try {
-    const reviews = await reviewService.getReviews(activeFilters);
+    let reviews = await reviewService.getReviews(activeFilters);
+
+    // Apply client-side sorting
+    if (activeFilters.sort === 'score-desc') {
+      reviews.sort((a, b) => (b.overallScore || b.score || 0) - (a.overallScore || a.score || 0));
+    } else if (activeFilters.sort === 'score-asc') {
+      reviews.sort((a, b) => (a.overallScore || a.score || 0) - (b.overallScore || b.score || 0));
+    } else if (activeFilters.sort === 'issues-desc') {
+      const getIssueCount = (r) => {
+        const c = r.counts || {};
+        return (c.bugs || 0) + (c.security || 0) + (c.critical || 0) + (c.performance || 0) + (c.quality || 0);
+      };
+      reviews.sort((a, b) => getIssueCount(b) - getIssueCount(a));
+    }
 
     if (countBadge) {
       countBadge.textContent = `${reviews.length} ${reviews.length === 1 ? 'Review' : 'Reviews'}`;
@@ -94,12 +118,18 @@ async function loadReviews() {
     reviews.forEach((review) => {
       const tr = document.createElement('tr');
       const counts = review.counts || {};
-      const totalIssues = (counts.bugs || 0) + (counts.security || 0) + (counts.quality || 0) + (counts.critical || 0) + (counts.performance || 0);
+      const totalIssues =
+        (counts.bugs || 0) +
+        (counts.security || 0) +
+        (counts.quality || 0) +
+        (counts.critical || 0) +
+        (counts.performance || 0);
       const score = review.overallScore || review.score || 85;
 
-      const statusBadge = review.status === 'Completed' || score >= 80
-        ? `<span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">Healthy</span>`
-        : `<span class="badge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">Attention Needed</span>`;
+      const statusBadge =
+        review.status === 'Completed' || score >= 80
+          ? `<span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">Healthy</span>`
+          : `<span class="badge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">Attention Needed</span>`;
 
       tr.innerHTML = `
         <td>

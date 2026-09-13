@@ -1,29 +1,14 @@
 /**
  * AI Code Reviewer - Repository Service
  *
- * Interacts with connected GitHub repositories via Spring Boot REST API.
- * Calls:
- *   GET /api/repositories
- *   GET /api/repositories/{id}
- *   GET /api/repositories/{id}/branches
- *   GET /api/repositories/{id}/files
- * Falls back to /json/mock-repositories.json when Spring Boot backend is offline.
+ * Interacts with connected GitHub repositories.
+ * Architecture:
+ *   - Mock Mode: Uses mockApi.js (no network requests to localhost:8080 or external GitHub)
+ *   - Real Mode: Calls Spring Boot REST API (/api/repositories/*) which connects to GitHub API
  */
 
 import { apiClient } from './api.js';
-
-let cachedMockRepos = null;
-
-async function fetchJson(path) {
-  try {
-    const res = await fetch(path);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.warn(`[RepositoryService] Failed to load ${path}:`, err);
-    return null;
-  }
-}
+import { mockApi } from './mockApi.js';
 
 export const repositoryService = {
   /**
@@ -35,11 +20,7 @@ export const repositoryService = {
     if (apiRes.ok && Array.isArray(apiRes.data)) {
       return apiRes.data;
     }
-
-    if (!cachedMockRepos) {
-      cachedMockRepos = (await fetchJson('/json/mock-repositories.json')) || [];
-    }
-    return cachedMockRepos;
+    return await mockApi.getRepositories();
   },
 
   /**
@@ -51,26 +32,30 @@ export const repositoryService = {
     if (apiRes.ok && apiRes.data) {
       return apiRes.data;
     }
-
-    if (!cachedMockRepos) {
-      cachedMockRepos = (await fetchJson('/json/mock-repositories.json')) || [];
-    }
-    return cachedMockRepos.find((r) => r.id === id) || cachedMockRepos[0] || null;
+    return await mockApi.getRepositoryById(id);
   },
 
   /**
    * Get branches for a repository
+   * Calls: GET /api/repositories/{id}/branches
    */
   async getBranches(repoId) {
-    const repo = await this.getRepositoryById(repoId);
-    return repo ? repo.branches || ['main'] : ['main'];
+    const apiRes = await apiClient.get(`/api/repositories/${repoId}/branches`);
+    if (apiRes.ok && Array.isArray(apiRes.data)) {
+      return apiRes.data;
+    }
+    return await mockApi.getRepositoryBranches(repoId);
   },
 
   /**
    * Get files in repository branch
+   * Calls: GET /api/repositories/{id}/files
    */
   async getFiles(repoId, branch = 'main') {
-    const repo = await this.getRepositoryById(repoId);
-    return repo ? repo.files || [] : [];
+    const apiRes = await apiClient.get(`/api/repositories/${repoId}/files`, { branch });
+    if (apiRes.ok && Array.isArray(apiRes.data)) {
+      return apiRes.data;
+    }
+    return await mockApi.getRepositoryFiles(repoId, branch);
   }
 };
