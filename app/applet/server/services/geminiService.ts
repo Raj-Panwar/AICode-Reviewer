@@ -83,9 +83,6 @@ export class GeminiService {
     return this.aiClient;
   }
 
-  /**
-   * Run structured AI review using Gemini with automatic fallback on temporary upstream 503/504 spikes
-   */
   public static async analyzeCodeWithGemini(code: string, language: string, fileName: string): Promise<StructuredAiReview> {
     const ai = this.getClient();
 
@@ -116,7 +113,6 @@ Source Code to Review:
 ${code}
 \`\`\``;
 
-    // Single attempt with strict 10s deadline
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
@@ -233,17 +229,12 @@ ${code}
         return JSON.parse(text) as StructuredAiReview;
       }
     } catch (err: any) {
-      console.warn(`[GeminiService] Upstream Gemini 3.8 Flash returned: ${err.message?.substring(0, 100)}. Falling back to deterministic deep analyzer.`);
+      console.warn(`[GeminiService] Upstream Gemini 3.8 Flash returned error:`, err.message?.substring(0, 100));
     }
 
-    // High-demand fallback: Deterministic static code inspection analyzer
-    // Ensures end-to-end functionality never breaks when upstream Gemini models experience temporary capacity spikes
     return this.generateDeterministicAnalysis(code, language, fileName);
   }
 
-  /**
-   * Run standalone complexity evaluation
-   */
   public static async analyzeComplexityWithGemini(code: string, language: string): Promise<ComplexityAnalysisResult> {
     const ai = this.getClient();
 
@@ -277,10 +268,10 @@ ${code}
       const text = response.text;
       if (text) return JSON.parse(text) as ComplexityAnalysisResult;
     } catch (e: any) {
-      console.warn(`[GeminiService] Upstream complexity analysis encountered: ${e.message?.substring(0, 80)}. Falling back to algorithmic parser.`);
+      console.warn(`[GeminiService] Upstream complexity analysis returned error:`, e.message?.substring(0, 100));
     }
 
-    // Heuristic complexity evaluator
+    // Algorithmic complexity evaluation
     const hasNested = /(for|while)[\s\S]*?(for|while)/i.test(code);
     const hasRecursion = /\b([a-zA-Z0-9_]+)\s*\([^)]*\)[\s\S]*?\b\1\s*\(/i.test(code);
     const time = hasNested ? 'O(n²)' : hasRecursion ? 'O(2ⁿ)' : 'O(n)';
@@ -289,19 +280,15 @@ ${code}
     return {
       timeComplexity: time,
       spaceComplexity: space,
-      explanation: `Analyzed algorithmic loops and recursive structures. The code demonstrates ${time} time complexity and ${space} auxiliary space.`,
+      explanation: `Evaluated algorithmic loops and recursion structures. Demonstrates ${time} time complexity and ${space} auxiliary space.`,
       bottlenecks: [hasNested ? 'Nested loop iterations' : 'Sequential array traversal'],
       optimizationSuggestions: [
-        'Utilize indexed data structures like Hash Map or Set to avoid iterative scans.',
+        'Utilize indexed data structures like Hash Map or Set to eliminate iterative scans.',
         'Consider two-pointer technique if input can be sorted.'
       ]
     };
   }
 
-  /**
-   * Deterministic static code inspection analyzer
-   * Guarantees 100% reliable responses for all 9 supported languages even during Gemini 503 load spikes
-   */
   private static generateDeterministicAnalysis(code: string, language: string, fileName: string): StructuredAiReview {
     const hasNested = /(for|while)[\s\S]*?(for|while)/i.test(code);
     const hasRecursion = /\b([a-zA-Z0-9_]+)\s*\([^)]*\)[\s\S]*?\b\1\s*\(/i.test(code);

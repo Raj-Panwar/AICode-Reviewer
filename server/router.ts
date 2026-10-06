@@ -97,7 +97,7 @@ export async function handleApiRoute(
   }
 
   // --- Dashboard Stats ---
-  if (pathname === '/api/dashboard/stats' && method === 'GET') {
+  if ((pathname === '/api/dashboard/stats' || pathname === '/api/stats') && method === 'GET') {
     return ReviewController.stats(authReq, res);
   }
 
