@@ -2,19 +2,17 @@
  * AI Code Reviewer - Unified API Client & Mode Switcher
  *
  * Single configuration point for API routing:
- *   - "mock" (DEFAULT): Pure client-side simulation via mockApi.js.
- *     NO network calls to localhost:8080 are made. Zero connection errors in Live Server.
- *   - "real": Connects to the future Spring Boot REST backend (default: http://localhost:8080),
- *     which in turn orchestrates the Gemini 2.5 API securely server-side.
+ *   - "real" (DEFAULT): Connects directly to backend REST endpoints (/api/*),
+ *     which securely orchestrates Gemini AI and database operations.
+ *   - "mock": Optional developer simulation via mockApi.js for offline testing.
  *
  * Architecture:
- *   MOCK MODE (Active by default):
- *     Frontend -> API Client (apiClient) -> Mock API (mockApi.js) -> Mock JSON / Datasets
+ *   REAL API MODE (Default & Active):
+ *     Frontend -> API Client (apiClient) -> Backend REST API (/api/*) -> Gemini AI + JSON DB
  *
- *   REAL API MODE (Future Backend):
- *     Frontend -> API Client (apiClient) -> Spring Boot (localhost:8080) -> Gemini API
+ *   MOCK MODE (Developer Simulation):
+ *     Frontend -> API Client (apiClient) -> Mock API (mockApi.js) -> Mock JSON / Datasets
  */
-
 import { mockApi } from './mockApi.js';
 
 // Central API Configuration Constants
@@ -22,26 +20,26 @@ const STORAGE_KEY_MODE = 'api_mode';
 const STORAGE_KEY_BASE_URL = 'api_base_url';
 const STORAGE_KEY_DELAY = 'mock_network_delay';
 const STORAGE_KEY_SIMULATE_ERR = 'mock_simulate_error';
+const STORAGE_KEY_TOKEN = 'auth_token';
 
-// Determine initial mode: Defaults strictly to 'mock'
+// Determine initial mode: Defaults to 'real' backend mode
 let API_MODE =
   (typeof window !== 'undefined' &&
     (localStorage.getItem(STORAGE_KEY_MODE) || window.API_MODE)) ||
-  'mock';
+  'real';
 
-// Centralized Backend URL for future Spring Boot service
+// In browser, relative URL "" routes to current host/port seamlessly
 let API_BASE_URL =
   (typeof window !== 'undefined' &&
     (localStorage.getItem(STORAGE_KEY_BASE_URL) || window.API_BASE_URL)) ||
-  'http://localhost:8080';
+  '';
 
-const DEFAULT_TIMEOUT_MS = 12000;
+const DEFAULT_TIMEOUT_MS = 30000;
 
 // Initialize mock API delay & error simulation from storage if available
 if (typeof window !== 'undefined') {
   const savedDelay = localStorage.getItem(STORAGE_KEY_DELAY);
   if (savedDelay) mockApi.setDelay(parseInt(savedDelay, 10));
-
   const savedErr = localStorage.getItem(STORAGE_KEY_SIMULATE_ERR);
   if (savedErr) mockApi.setSimulateError(savedErr === 'true');
 }
@@ -77,7 +75,7 @@ export const apiClient = {
   },
 
   /**
-   * Get the centralized Spring Boot API base URL
+   * Get the backend API base URL
    */
   getBaseUrl() {
     return API_BASE_URL;
@@ -87,11 +85,31 @@ export const apiClient = {
    * Configure the backend base URL (used only in 'real' mode)
    */
   setBaseUrl(url) {
-    if (url && typeof url === 'string') {
+    if (typeof url === 'string') {
       API_BASE_URL = url.trim().replace(/\/+$/, '');
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(STORAGE_KEY_BASE_URL, API_BASE_URL);
       }
+    }
+  },
+
+  /**
+   * Retrieve stored auth token
+   */
+  getToken() {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEY_TOKEN) || '';
+    }
+    return '';
+  },
+
+  /**
+   * Set stored auth token
+   */
+  setToken(token) {
+    if (typeof localStorage !== 'undefined') {
+      if (token) localStorage.setItem(STORAGE_KEY_TOKEN, token);
+      else localStorage.removeItem(STORAGE_KEY_TOKEN);
     }
   },
 
@@ -128,7 +146,6 @@ export const apiClient = {
    */
   async checkHealth() {
     if (this.isMockMode()) {
-      // In Mock Mode, return instant success without making ANY network requests
       return {
         ok: true,
         mode: 'mock',
@@ -137,38 +154,36 @@ export const apiClient = {
       };
     }
 
-    // In Real Mode, query Spring Boot backend on configured port
     try {
-      const res = await this.get('/api/health', {}, 3500);
+      const res = await this.get('/api/health', {}, 6000);
       return {
         ok: res.ok,
         mode: 'real',
         status: res.status,
         message: res.ok
-          ? `Connected to Spring Boot backend at ${API_BASE_URL}`
-          : `Failed to connect to Spring Boot backend at ${API_BASE_URL}`
+          ? `Connected to AI Code Reviewer backend`
+          : `Failed to connect to AI Code Reviewer backend`
       };
     } catch {
       return {
         ok: false,
         mode: 'real',
-        message: `Spring Boot backend unreachable at ${API_BASE_URL}`
+        message: `Backend unreachable at ${API_BASE_URL || window.location.origin}`
       };
     }
   },
 
   /**
    * HTTP GET Request
-   * Routes to mockApi in 'mock' mode; uses fetch() only in 'real' mode.
    */
   async get(endpoint, params = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
-    // 1. MOCK MODE: Route directly to Mock API (DO NOT touch localhost:8080)
     if (this.isMockMode()) {
       return await mockApi.get(endpoint, params);
     }
 
-    // 2. REAL MODE: Execute real HTTP request to Spring Boot backend
-    const url = new URL(`${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const fullUrl = `${API_BASE_URL}${cleanEndpoint}`;
+    const url = new URL(fullUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
     Object.keys(params).forEach((key) => {
       if (params[key] !== undefined && params[key] !== null) {
         url.searchParams.append(key, params[key]);
@@ -178,20 +193,24 @@ export const apiClient = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    };
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     try {
       const response = await fetch(url.toString(), {
         method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers,
         signal: controller.signal
       });
-
       clearTimeout(timer);
 
       if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson?.error?.message || `HTTP Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -207,35 +226,38 @@ export const apiClient = {
 
   /**
    * HTTP POST Request
-   * Routes to mockApi in 'mock' mode; uses fetch() only in 'real' mode.
    */
   async post(endpoint, body = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
-    // 1. MOCK MODE: Route directly to Mock API (DO NOT touch localhost:8080)
     if (this.isMockMode()) {
       return await mockApi.post(endpoint, body);
     }
 
-    // 2. REAL MODE: Execute real HTTP request to Spring Boot backend
-    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const fullUrl = `${API_BASE_URL}${cleanEndpoint}`;
+    const url = new URL(fullUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    };
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify(body),
         signal: controller.signal
       });
-
       clearTimeout(timer);
 
       if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson?.error?.message || `HTTP Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -245,6 +267,45 @@ export const apiClient = {
       console.warn(
         `[API Client] Real backend POST ${endpoint} failed (${err.name === 'AbortError' ? 'Timeout' : err.message}).`
       );
+      return { ok: false, error: err, isBackendOffline: true, isMock: false };
+    }
+  },
+
+  /**
+   * HTTP DELETE Request
+   */
+  async delete(endpoint, timeoutMs = DEFAULT_TIMEOUT_MS) {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const fullUrl = `${API_BASE_URL}${cleanEndpoint}`;
+    const url = new URL(fullUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    };
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'DELETE',
+        headers,
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson?.error?.message || `HTTP Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return { ok: true, status: response.status, data, isMock: false };
+    } catch (err) {
+      clearTimeout(timer);
       return { ok: false, error: err, isBackendOffline: true, isMock: false };
     }
   }

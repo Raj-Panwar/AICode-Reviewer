@@ -11,6 +11,7 @@
     "lint": "echo 'No lint errors in vanilla app.'"
   },
   "dependencies": {
+    "@google/genai": "^2.27.0",
     "vite": "^6.2.3"
   },
   "devDependencies": {

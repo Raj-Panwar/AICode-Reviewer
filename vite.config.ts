@@ -1,10 +1,14 @@
 import path from 'path';
 import { defineConfig, Plugin } from 'vite';
+import { handleApiRoute } from './server/router.js';
 
 function rootRedirectPlugin(): Plugin {
   return {
     name: 'root-redirect-plugin',
     configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        handleApiRoute(req, res, next);
+      });
       server.middlewares.use((req, _res, next) => {
         if (req.url === '/' || req.url === '/index.html') {
           req.url = '/html/index.html';
