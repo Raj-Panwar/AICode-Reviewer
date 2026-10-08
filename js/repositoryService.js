@@ -57,5 +57,25 @@ export const repositoryService = {
       return apiRes.data;
     }
     return await mockApi.getRepositoryFiles(repoId, branch);
+  },
+
+  /**
+   * Connect and track a new repository
+   * Calls: POST /api/repositories
+   */
+  async connectRepository(repoIdentifier) {
+    let owner = 'user';
+    let name = (repoIdentifier || '').trim();
+    if (name.includes('/')) {
+      const parts = name.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').split('/');
+      owner = parts[0] || 'user';
+      name = parts[1] || parts[0];
+    }
+    const apiRes = await apiClient.post('/api/repositories', { owner, name });
+    if (apiRes.ok && apiRes.data) {
+      return apiRes.data;
+    }
+    return null;
   }
 };
+

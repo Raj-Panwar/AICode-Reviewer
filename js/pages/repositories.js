@@ -133,9 +133,21 @@ function initConnectModal() {
       const name = repoNameInput ? repoNameInput.value.trim() : '';
       if (!name) return;
 
-      modal.classList.remove('active');
-      if (repoNameInput) repoNameInput.value = '';
-      await loadRepositories();
+      const originalText = confirmBtn.textContent;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Connecting...';
+
+      try {
+        await repositoryService.connectRepository(name);
+        modal.classList.remove('active');
+        if (repoNameInput) repoNameInput.value = '';
+        await loadRepositories();
+      } catch (err) {
+        console.error('Failed to connect repository:', err);
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+      }
     });
   }
 }

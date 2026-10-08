@@ -1,6 +1,6 @@
 import path from 'path';
 import { defineConfig, Plugin } from 'vite';
-import { handleApiRoute } from './server/router.js';
+import { handleApiRoute } from './server/router.ts';
 
 function rootRedirectPlugin(): Plugin {
   return {
@@ -32,14 +32,14 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'html/index.html'),
-        dashboard: path.resolve(__dirname, 'html/dashboard.html'),
-        newReview: path.resolve(__dirname, 'html/new-review.html'),
-        review: path.resolve(__dirname, 'html/review.html'),
-        reviews: path.resolve(__dirname, 'html/reviews.html'),
-        repositories: path.resolve(__dirname, 'html/repositories.html'),
-        complexity: path.resolve(__dirname, 'html/complexity.html'),
-        settings: path.resolve(__dirname, 'html/settings.html'),
+        main: path.resolve(process.cwd(), 'html/index.html'),
+        dashboard: path.resolve(process.cwd(), 'html/dashboard.html'),
+        newReview: path.resolve(process.cwd(), 'html/new-review.html'),
+        review: path.resolve(process.cwd(), 'html/review.html'),
+        reviews: path.resolve(process.cwd(), 'html/reviews.html'),
+        repositories: path.resolve(process.cwd(), 'html/repositories.html'),
+        complexity: path.resolve(process.cwd(), 'html/complexity.html'),
+        settings: path.resolve(process.cwd(), 'html/settings.html'),
       },
     },
   },
@@ -50,3 +50,4 @@ export default defineConfig({
     watch: process.env.DISABLE_HMR === 'true' ? null : {},
   },
 });
+

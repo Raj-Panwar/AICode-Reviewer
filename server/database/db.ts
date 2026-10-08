@@ -139,11 +139,23 @@ class JsonDatabase {
   private data: DatabaseSchema;
 
   constructor() {
-    const dataDir = path.resolve(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY);
+    const primaryDir = path.resolve(process.cwd(), 'data');
+    let chosenDir = primaryDir;
+
+    if (isServerless) {
+      chosenDir = '/tmp';
+    } else {
+      try {
+        if (!fs.existsSync(primaryDir)) {
+          fs.mkdirSync(primaryDir, { recursive: true });
+        }
+      } catch {
+        chosenDir = '/tmp';
+      }
     }
-    this.dbPath = path.join(dataDir, 'database.json');
+
+    this.dbPath = path.join(chosenDir, 'database.json');
     this.data = this.loadInitialData();
   }
 
@@ -155,6 +167,17 @@ class JsonDatabase {
       } catch (err) {
         console.warn('[Database] Failed to read existing database.json, re-seeding:', err);
       }
+    }
+
+    // Also check root data/database.json if dbPath is /tmp/database.json
+    const localDataPath = path.resolve(process.cwd(), 'data/database.json');
+    if (fs.existsSync(localDataPath)) {
+      try {
+        const raw = fs.readFileSync(localDataPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        this.saveData(parsed);
+        return parsed;
+      } catch {}
     }
 
     // Load initial seeds from json/ folder if present
@@ -206,7 +229,14 @@ class JsonDatabase {
     try {
       fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2), 'utf8');
     } catch (err) {
-      console.error('[Database] Failed to write database.json:', err);
+      if (this.dbPath !== '/tmp/database.json') {
+        try {
+          this.dbPath = '/tmp/database.json';
+          fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2), 'utf8');
+          return;
+        } catch {}
+      }
+      console.warn('[Database] In-memory update active, disk write deferred:', err);
     }
   }
 

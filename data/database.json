@@ -63,6 +63,24 @@
       "role": "Staff Engineer",
       "organization": "Fintech Core",
       "createdAt": "2026-10-06T19:07:33.780Z"
+    },
+    {
+      "id": "usr_1791469168907_xt1q2",
+      "name": "Test Engineer",
+      "email": "test_1791469168907@test.io",
+      "passwordHash": "a09591fbdb753b6ce5348624e068cad24a2a240591fd2b26d8f0d8266ceaff2e",
+      "role": "Staff Engineer",
+      "organization": "Fintech Core",
+      "createdAt": "2026-10-08T14:19:28.909Z"
+    },
+    {
+      "id": "usr_1791469539540_h5l1p",
+      "name": "Test Engineer",
+      "email": "test_1791469539540@test.io",
+      "passwordHash": "a09591fbdb753b6ce5348624e068cad24a2a240591fd2b26d8f0d8266ceaff2e",
+      "role": "Staff Engineer",
+      "organization": "Fintech Core",
+      "createdAt": "2026-10-08T14:25:39.543Z"
     }
   ],
   "reviews": [

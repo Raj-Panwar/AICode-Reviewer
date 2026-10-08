@@ -7,7 +7,31 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNavigation();
   highlightActiveNav();
   initGlobalSearch();
+  initSidebarDynamicCounts();
 });
+
+/**
+ * Dynamically synchronizes sidebar badges with real backend metrics
+ */
+async function initSidebarDynamicCounts() {
+  const reviewsBadge = document.querySelector('a[href="reviews.html"] .nav-badge');
+  const reposBadge = document.querySelector('a[href="repositories.html"] .nav-badge');
+
+  if (!reviewsBadge && !reposBadge) return;
+
+  try {
+    const res = await fetch('/api/dashboard/stats');
+    if (res.ok) {
+      const data = await res.json();
+      if (reviewsBadge && typeof data.totalReviews === 'number') {
+        reviewsBadge.textContent = data.totalReviews;
+      }
+      if (reposBadge && typeof data.repositoriesCount === 'number') {
+        reposBadge.textContent = data.repositoriesCount;
+      }
+    }
+  } catch {}
+}
 
 /**
  * Mobile sidebar drawer toggle with overlay backdrop
