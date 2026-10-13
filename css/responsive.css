@@ -1,0 +1,118 @@
+/* AI Code Reviewer - Responsive Styles */
+
+/* Mobile Sidebar Drawer */
+@media (max-width: 992px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-main {
+    margin-left: 0;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .search-bar {
+    width: 200px;
+  }
+
+  .complexity-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-core-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-topbar {
+    padding: 0 16px;
+  }
+
+  .page-content {
+    padding: 16px;
+  }
+
+  .health-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .search-bar {
+    display: none;
+  }
+
+  .data-table-container {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+  }
+
+  .tabs-nav {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .page-actions .btn {
+    width: 100%;
+  }
+
+  .code-viewer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .issue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .issue-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Sidebar Backdrop for Mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 35;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
