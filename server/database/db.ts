@@ -180,20 +180,11 @@ class JsonDatabase {
       } catch {}
     }
 
-    // Load initial seeds from json/ folder if present
-    const seedReviews: ReviewEntity[] = this.loadJsonFile('json/mock-reviews.json', []);
-    const seedRepos: RepositoryEntity[] = this.loadJsonFile('json/mock-repositories.json', []);
-    const seedComplexity: ComplexityCaseStudy[] = this.loadJsonFile('json/mock-complexity.json', []);
-
     const initialData: DatabaseSchema = {
       users: [],
-      reviews: seedReviews.map((r) => ({
-        ...r,
-        userId: r.userId || 'usr_system',
-        createdAt: r.createdAt || new Date().toISOString()
-      })),
-      repositories: seedRepos,
-      complexityLibrary: seedComplexity
+      reviews: [],
+      repositories: [],
+      complexityLibrary: []
     };
 
     this.saveData(initialData);

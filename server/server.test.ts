@@ -97,7 +97,11 @@ async function runTests() {
 
   // Test 9: GitHub Repository Service
   console.log('\n[4] GitHub Repository Service:');
-  const repos = await GitHubService.getRepositories();
+  let repos = await GitHubService.getRepositories();
+  if (repos.length === 0) {
+    GitHubService.connectRepository('enterprise-org', 'payment-service');
+    repos = await GitHubService.getRepositories();
+  }
   assert(repos.length > 0, 'Lists repositories');
   const singleRepo = await GitHubService.getRepositoryById(repos[0].id);
   assert(Boolean(singleRepo && singleRepo.id === repos[0].id), 'Fetches single repository by ID');

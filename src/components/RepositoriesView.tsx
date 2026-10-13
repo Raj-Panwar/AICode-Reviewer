@@ -63,8 +63,23 @@ export const RepositoriesView: React.FC<RepositoriesViewProps> = ({ onStartRevie
       </div>
 
       {/* Repos Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {repos.map((repo) => {
+      {repos.length === 0 ? (
+        <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-4">
+          <GitBranch className="w-12 h-12 text-slate-300 mx-auto" />
+          <h3 className="font-bold text-slate-800 text-lg">No Repositories Connected Yet</h3>
+          <p className="text-slate-500 text-sm max-w-md mx-auto">
+            Integrate your GitHub repositories to inspect pull requests and run automated AI code reviews on entire branches.
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm rounded-xl transition inline-flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Connect Your First Repository
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {repos.map((repo) => {
           const healthColor = repo.healthScore >= 85 ? 'text-emerald-600' : 'text-amber-600';
           return (
             <div key={repo.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
@@ -107,7 +122,8 @@ export const RepositoriesView: React.FC<RepositoriesViewProps> = ({ onStartRevie
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Connect Modal */}
       {showModal && (

@@ -79,14 +79,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Avg Code Quality</div>
-          <div className="text-3xl font-extrabold text-teal-700">{stats?.averageCodeQuality || 88}%</div>
-          <div className="text-xs text-teal-600 font-semibold mt-2">Exceeds threshold (80%)</div>
+          <div className="text-3xl font-extrabold text-teal-700">{stats?.totalReviews ? `${stats.averageCodeQuality}%` : '—'}</div>
+          <div className="text-xs text-teal-600 font-semibold mt-2">{stats?.totalReviews ? 'Exceeds threshold (80%)' : 'No data yet'}</div>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Avg Complexity</div>
-          <div className="text-3xl font-extrabold text-indigo-600">{stats?.averageComplexity || 'O(n log n)'}</div>
-          <div className="text-xs text-slate-500 mt-2">Optimal bounds maintained</div>
+          <div className="text-3xl font-extrabold text-indigo-600">{stats?.totalReviews ? stats.averageComplexity : '—'}</div>
+          <div className="text-xs text-slate-500 mt-2">{stats?.totalReviews ? 'Optimal bounds maintained' : 'No iterations analyzed'}</div>
         </div>
       </div>
 
@@ -94,14 +94,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-3">
           <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider">Enterprise Health Index</span>
-          <h2 className="text-3xl font-extrabold">{healthScore} / 100 — {stats?.healthStatusText || 'Optimal Code Health'}</h2>
+          <h2 className="text-3xl font-extrabold">
+            {stats?.totalReviews ? `${healthScore} / 100 — ${stats?.healthStatusText || 'Optimal Code Health'}` : '100 / 100 — Clean Baseline'}
+          </h2>
           <p className="text-slate-300 text-sm max-w-xl">
-            Your codebase maintains rigorous architectural compliance. Zero critical unhandled exceptions detected in recent production builds.
+            {stats?.totalReviews
+              ? 'Your codebase maintains rigorous architectural compliance. Continuous AI defect inspection active.'
+              : 'Workspace initialized. Submit your first piece of source code to generate automated defect and complexity reports.'}
           </p>
         </div>
 
         <div className="w-32 h-32 rounded-full flex items-center justify-center relative shadow-inner bg-slate-800 border-4 border-teal-500/30">
-          <div className="text-3xl font-black text-teal-400">{healthScore}%</div>
+          <div className="text-3xl font-black text-teal-400">{stats?.totalReviews ? `${healthScore}%` : '100%'}</div>
         </div>
       </div>
 
