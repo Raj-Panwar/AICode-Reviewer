@@ -1,7 +1,7 @@
 # AI Code Reviewer
 
-> **Understand Your Code. Improve It. Ship With Confidence.**  
-> An AI-powered code review and algorithmic complexity analysis platform designed to help software engineers inspect, debug, optimize, and master source code with mentor-style feedback.
+> **Enterprise AI Code Reviewer & Algorithmic Complexity Engine**  
+> Modern React SPA with Google Workspace SSO, Big-O asymptotic profiling, and automated vulnerability remediation.
 
 ---
 
