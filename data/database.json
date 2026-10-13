@@ -28,7 +28,107 @@
       "createdAt": "2026-10-13T21:04:41.898Z"
     }
   ],
-  "reviews": [],
+  "reviews": [
+    {
+      "id": "REV-899466",
+      "reviewId": "REV-899466",
+      "userId": "usr_test",
+      "language": "Java",
+      "fileName": "Bad.java",
+      "file": "Bad.java",
+      "project": "Manual Code Review",
+      "repository": "Direct Input",
+      "branch": "main",
+      "date": "2026-10-13 21:06",
+      "createdAt": "2026-10-13T21:06:49.478Z",
+      "score": 50,
+      "overallScore": 50,
+      "status": "Attention Needed",
+      "summary": "Analyzed Bad.java (Java). Detected 2 syntax/runtime issue(s). Runtime: O(n), Space: O(1).",
+      "counts": {
+        "critical": 0,
+        "bugs": 2,
+        "security": 0,
+        "performance": 0,
+        "complexity": 1,
+        "quality": 1
+      },
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(1)",
+      "complexity": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "explanation": "Single iterative loop processes each element of the input in linear O(n) time. Operates in-place utilizing only constant O(1) auxiliary variables and pointers.",
+        "confidence": "HIGH",
+        "optimizationAvailable": false,
+        "bottleneck": "Sequential linear iteration over input collection",
+        "suggestedApproach": "Single-pass traversal is optimal for unindexed collections."
+      },
+      "complexityAnalysis": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "timeExplanation": "Single iterative loop processes each element of the input in linear O(n) time. Operates in-place utilizing only constant O(1) auxiliary variables and pointers.",
+        "spaceExplanation": "Auxiliary allocation bounded by O(1).",
+        "bottleneckLine": 5,
+        "isOptimal": true,
+        "recommendedPattern": "Algorithmic Optimization",
+        "comparisonTable": [
+          {
+            "metric": "Current Implementation",
+            "time": "O(n)",
+            "space": "O(1)",
+            "throughput": "~420 ops/sec"
+          },
+          {
+            "metric": "Mentor Recommendation",
+            "time": "O(n)",
+            "space": "O(1)",
+            "throughput": "~15,200 ops/sec"
+          }
+        ]
+      },
+      "issues": [
+        {
+          "id": "REV-899466-ISSUE-1",
+          "severity": "HIGH",
+          "category": "BUGS",
+          "line": 5,
+          "title": "Runtime Error: Potential Division by Zero",
+          "description": "Arithmetic division divides directly by literal zero.",
+          "whyItMatters": "Triggers fatal arithmetic exceptions at runtime.",
+          "suggestedFix": "Add a denominator guard check before dividing."
+        },
+        {
+          "id": "REV-899466-ISSUE-2",
+          "severity": "HIGH",
+          "category": "BUGS",
+          "line": 8,
+          "title": "Logical Bug: Unbounded Infinite Loop",
+          "description": "Loop condition evaluates to true statically without a break clause.",
+          "whyItMatters": "Causes CPU thread lock and application freeze.",
+          "suggestedFix": "Add explicit exit criteria or break statement."
+        },
+        {
+          "id": "REV-899466-ISSUE-3",
+          "severity": "MEDIUM",
+          "category": "QUALITY",
+          "line": 1,
+          "title": "Code Refactoring Advice",
+          "description": "Address flagged syntax or runtime exceptions to ensure robust execution.",
+          "whyItMatters": "Improves reliability and test coverage.",
+          "suggestedFix": "Refactor flagged sections."
+        }
+      ],
+      "recommendations": [
+        "Consider early termination (break/return) once the target condition is satisfied.",
+        "Implement defensive validation guards for all input parameters.",
+        "Add comprehensive unit test coverage covering boundary and edge cases."
+      ],
+      "optimizedCode": "// Optimized implementation: Target O(n) Time, O(n) Space\n// Approach: Single-pass traversal is optimal for unindexed collections.\npublic class Bad { void test() { int x = 5 / 0; while(true) { } } }",
+      "codeContent": "public class Bad { void test() { int x = 5 / 0; while(true) { } } }",
+      "rawCode": "public class Bad { void test() { int x = 5 / 0; while(true) { } } }"
+    }
+  ],
   "repositories": [
     {
       "id": "repo-8404",

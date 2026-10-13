@@ -283,20 +283,15 @@ ${code}
     };
   }
 
-  private static generateDeterministicAnalysis(code: string, language: string, fileName: string): StructuredAiReview {
-    const trimmed = code.trim();
-    const bugs: Array<{ title: string; description: string; severity: string; line: number; whyItMatters: string; suggestion: string }> = [];
-
     // 1. Check for gibberish / rubbish code
-    const programmingKeywords = /\b(function|def|class|public|private|static|let|const|var|import|return|if|for|while|print|console|struct|fn|int|void|float|string|bool|async|await|try|catch|package|func|type|switch|case|break|continue|new|this|self)\b/i;
+    const programmingKeywords = /\b(function|def|class|public|private|static|let|const|var|import|return|if|for|while|print|console|struct|fn|int|void|float|string|bool|async|await|try|catch|package|func|type|switch|case|break|continue|new|this|self|public|protected|internal)\b/i;
     const hasAnyKeyword = programmingKeywords.test(trimmed);
-    const hasEnoughLength = trimmed.length >= 3;
-    const isGibberish = hasEnoughLength && !hasAnyKeyword && !/[{};=<>+*\/()-]/.test(trimmed);
+    const isGibberish = trimmed.length > 5 && !hasAnyKeyword && !/[{};=<>+*\/()-]/.test(trimmed);
 
-    if (isGibberish || (trimmed.length > 5 && !hasAnyKeyword && trimmed.split(/\s+/).length < 2)) {
+    if (isGibberish) {
       bugs.push({
         title: 'Syntax Error: Invalid or Unrecognized Source Code',
-        description: 'Input contains unrecognized gibberish, random text, or non-executable tokens that cannot be parsed by any programming language compiler.',
+        description: 'Input contains unrecognized tokens that cannot be parsed by any programming language compiler.',
         severity: 'CRITICAL',
         line: 1,
         whyItMatters: 'Interpreters and compilers reject non-code input entirely.',
@@ -304,31 +299,16 @@ ${code}
       });
 
       return {
-        summary: `Compilation failed for ${fileName} (${language}). Unrecognized tokens detected.`,
-        overallScore: 12,
+        summary: `Analysis failed for ${fileName} (${language}).`,
+        overallScore: 10,
         language,
-        complexity: {
-          time: 'N/A',
-          space: 'N/A',
-          explanation: 'Could not compute complexity due to compilation syntax failure.',
-          bottleneck: 'Invalid syntax',
-          suggestedApproach: 'Provide valid source code.'
-        },
+        complexity: { time: 'N/A', space: 'N/A', explanation: 'N/A', bottleneck: 'Syntax error', suggestedApproach: 'N/A' },
         bugs,
         securityIssues: [],
-        codeQuality: [
-          {
-            title: 'Syntax Validation Failed',
-            description: 'The source code does not adhere to valid grammar rules.',
-            severity: 'CRITICAL',
-            line: 1,
-            whyItMatters: 'Code cannot execute.',
-            suggestion: 'Write valid code.'
-          }
-        ],
+        codeQuality: [{ title: 'Syntax Error', description: 'Invalid source', severity: 'CRITICAL', line: 1, whyItMatters: 'Unparsable', suggestion: 'Correct syntax' }],
         performanceIssues: [],
         optimizations: [],
-        recommendations: ['Provide valid source code before requesting algorithmic profiling.'],
+        recommendations: ['Provide valid source code.'],
         finalRecommendation: 'Compilation error: Invalid source code.'
       };
     }
@@ -338,35 +318,47 @@ ${code}
     const space = profile.spaceComplexity;
     const isQuadraticOrWorse = /O\((?:n[\^²³456789]|2\^|2ⁿ|n!)/.test(time);
 
-    // Check unmatched braces
+    // Structural syntax checks
     let openBraces = (code.match(/\{/g) || []).length;
     let closeBraces = (code.match(/\}/g) || []).length;
     if (openBraces !== closeBraces) {
       bugs.push({
         title: 'Syntax Error: Unmatched Braces ({ })',
-        description: `Found ${openBraces} opening braces and ${closeBraces} closing braces.`,
+        description: `Found ${openBraces} opening and ${closeBraces} closing braces.`,
         severity: 'CRITICAL',
         line: 1,
-        whyItMatters: 'Mismatched scope blocks cause compiler syntax errors.',
-        suggestion: 'Ensure all opening and closing curly braces match.'
+        whyItMatters: 'Misaligned scope blocks break code structure.',
+        suggestion: 'Ensure all curly braces are balanced.'
       });
     }
 
-    // Check unmatched parentheses
-    let openParens = (code.match(/\(/g) || []).length;
-    let closeParens = (code.match(/\)/g) || []).length;
-    if (openParens !== closeParens) {
+    // Empty Catch
+    if (/\bcatch\s*\(\s*[a-zA-Z0-9_]+\s*\)\s*\{\s*\}/i.test(code)) {
       bugs.push({
-        title: 'Syntax Error: Unmatched Parentheses (( ))',
-        description: `Found ${openParens} opening parentheses and ${closeParens} closing parentheses.`,
-        severity: 'CRITICAL',
-        line: 1,
-        whyItMatters: 'Causes expression parsing failure.',
-        suggestion: 'Verify all opening and closing parentheses match.'
+        title: 'Security/Robustness: Empty Catch Block',
+        description: 'An exception catch block is present but empty.',
+        severity: 'MEDIUM',
+        line: 10,
+        whyItMatters: 'Swallowing exceptions masks production errors and makes debugging impossible.',
+        suggestion: 'Log the error, rethrow, or implement a meaningful fallback.'
       });
     }
 
-    // Check division by zero
+    // Hardcoded secrets
+    const secretKeywords = /\b(password|apikey|token|secret|privatekey)\b/i;
+    const secretMatch = code.match(secretKeywords);
+    if (secretMatch) {
+      bugs.push({
+        title: 'Security: Potential Hardcoded Credential',
+        description: `Code references sensitive keyword: '${secretMatch[0]}'.`,
+        severity: 'CRITICAL',
+        line: 2,
+        whyItMatters: 'Hardcoding secrets leads to credential leakage when repositories are shared.',
+        suggestion: 'Use environment variables or a secret management service.'
+      });
+    }
+
+    // Potential Division by Zero
     if (/\/\s*0\b/.test(code) || /\/\s*0\.0\b/.test(code)) {
       bugs.push({
         title: 'Runtime Error: Potential Division by Zero',
@@ -378,11 +370,11 @@ ${code}
       });
     }
 
-    // Check infinite loop
+    // Infinite loop
     if (/\bwhile\s*\(\s*(?:true|1)\s*\)/i.test(code) && !/\break\b/.test(code)) {
       bugs.push({
         title: 'Logical Bug: Unbounded Infinite Loop',
-        description: 'Loop condition evaluates to true statically without a break clause.',
+        description: 'Loop condition is statically true with no break statement.',
         severity: 'HIGH',
         line: 8,
         whyItMatters: 'Causes CPU thread lock and application freeze.',
@@ -390,20 +382,10 @@ ${code}
       });
     }
 
-    let score = 100 - (bugs.length * 25);
+    let score = 100 - (bugs.length * 20);
     if (isQuadraticOrWorse) score -= 15;
-    score = Math.max(20, Math.min(100, score));
-
-    const securityIssues = /\b(eval|exec|password|secret|api_key|token)\b/i.test(code) ? [
-      {
-        title: 'Sensitive Credential or Eval Usage Risk',
-        description: 'Code contains references to eval, exec, or credential keywords.',
-        severity: 'HIGH',
-        line: 4,
-        whyItMatters: 'Exposes application to code injection or credential leakage.',
-        suggestion: 'Avoid dynamic code evaluation and store secrets securely in environment variables.'
-      }
-    ] : [];
+    if (!/[(){};]/.test(trimmed)) score = 20; // Poor quality for no syntax markers
+    score = Math.max(10, Math.min(100, score));
 
     const performanceIssues = isQuadraticOrWorse ? [
       {
@@ -417,7 +399,7 @@ ${code}
     ] : [];
 
     return {
-      summary: `Analyzed ${fileName} (${language}). Detected ${bugs.length} syntax/runtime issue(s). Runtime: ${time}, Space: ${space}.`,
+      summary: `Analyzed ${fileName} (${language}). Detected ${bugs.length} issue(s).`,
       overallScore: score,
       language,
       complexity: {
@@ -428,14 +410,14 @@ ${code}
         suggestedApproach: profile.suggestedApproach
       },
       bugs,
-      securityIssues,
+      securityIssues: [],
       codeQuality: bugs.length === 0 ? [] : [
         {
-          title: 'Code Refactoring Advice',
-          description: 'Address flagged syntax or runtime exceptions to ensure robust execution.',
+          title: 'Code Robustness Improvements',
+          description: 'Address syntax or runtime exceptions to ensure stability.',
           severity: 'MEDIUM',
           line: 1,
-          whyItMatters: 'Improves reliability and test coverage.',
+          whyItMatters: 'Code is prone to crashes or undefined behavior.',
           suggestion: 'Refactor flagged sections.'
         }
       ],
@@ -444,7 +426,7 @@ ${code}
         {
           title: isQuadraticOrWorse ? 'Linear Hash-Indexed Optimization' : 'Algorithmic Optimization',
           description: profile.suggestedApproach,
-          optimizedCode: `// Optimized implementation: Target O(n) Time, O(n) Space\n// Approach: ${profile.suggestedApproach}\n${code}`,
+          optimizedCode: `// Optimized implementation:\n// Approach: ${profile.suggestedApproach}\n${code}`,
           timeBefore: time,
           timeAfter: isQuadraticOrWorse ? 'O(n)' : time,
           spaceBefore: space,
