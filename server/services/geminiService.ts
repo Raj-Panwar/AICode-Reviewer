@@ -284,13 +284,59 @@ ${code}
   }
 
   private static generateDeterministicAnalysis(code: string, language: string, fileName: string): StructuredAiReview {
+    const trimmed = code.trim();
+    const bugs: Array<{ title: string; description: string; severity: string; line: number; whyItMatters: string; suggestion: string }> = [];
+
+    // 1. Check for gibberish / rubbish code
+    const programmingKeywords = /\b(function|def|class|public|private|static|let|const|var|import|return|if|for|while|print|console|struct|fn|int|void|float|string|bool|async|await|try|catch|package|func|type|switch|case|break|continue|new|this|self)\b/i;
+    const hasAnyKeyword = programmingKeywords.test(trimmed);
+    const hasEnoughLength = trimmed.length >= 3;
+    const isGibberish = hasEnoughLength && !hasAnyKeyword && !/[{};=<>+*\/()-]/.test(trimmed);
+
+    if (isGibberish || (trimmed.length > 5 && !hasAnyKeyword && trimmed.split(/\s+/).length < 2)) {
+      bugs.push({
+        title: 'Syntax Error: Invalid or Unrecognized Source Code',
+        description: 'Input contains unrecognized gibberish, random text, or non-executable tokens that cannot be parsed by any programming language compiler.',
+        severity: 'CRITICAL',
+        line: 1,
+        whyItMatters: 'Interpreters and compilers reject non-code input entirely.',
+        suggestion: 'Provide valid, syntactically correct source code in the selected language.'
+      });
+
+      return {
+        summary: `Compilation failed for ${fileName} (${language}). Unrecognized tokens detected.`,
+        overallScore: 12,
+        language,
+        complexity: {
+          time: 'N/A',
+          space: 'N/A',
+          explanation: 'Could not compute complexity due to compilation syntax failure.',
+          bottleneck: 'Invalid syntax',
+          suggestedApproach: 'Provide valid source code.'
+        },
+        bugs,
+        securityIssues: [],
+        codeQuality: [
+          {
+            title: 'Syntax Validation Failed',
+            description: 'The source code does not adhere to valid grammar rules.',
+            severity: 'CRITICAL',
+            line: 1,
+            whyItMatters: 'Code cannot execute.',
+            suggestion: 'Write valid code.'
+          }
+        ],
+        performanceIssues: [],
+        optimizations: [],
+        recommendations: ['Provide valid source code before requesting algorithmic profiling.'],
+        finalRecommendation: 'Compilation error: Invalid source code.'
+      };
+    }
+
     const profile = DeterministicComplexityAnalyzer.analyze(code, language);
     const time = profile.timeComplexity;
     const space = profile.spaceComplexity;
     const isQuadraticOrWorse = /O\((?:n[\^²³456789]|2\^|2ⁿ|n!)/.test(time);
-    
-    // Check for explicit code errors / flaws
-    const bugs: Array<{ title: string; description: string; severity: string; line: number; whyItMatters: string; suggestion: string }> = [];
 
     // Check unmatched braces
     let openBraces = (code.match(/\{/g) || []).length;
@@ -298,11 +344,11 @@ ${code}
     if (openBraces !== closeBraces) {
       bugs.push({
         title: 'Syntax Error: Unmatched Braces ({ })',
-        description: `Found ${openBraces} opening braces and ${closeBraces} closing braces. Scope blocks are misaligned.`,
+        description: `Found ${openBraces} opening braces and ${closeBraces} closing braces.`,
         severity: 'CRITICAL',
         line: 1,
-        whyItMatters: 'Prevents compiler / interpreter from parsing the source file successfully.',
-        suggestion: 'Verify all opening and closing curly braces are correctly paired.'
+        whyItMatters: 'Mismatched scope blocks cause compiler syntax errors.',
+        suggestion: 'Ensure all opening and closing curly braces match.'
       });
     }
 
@@ -315,8 +361,8 @@ ${code}
         description: `Found ${openParens} opening parentheses and ${closeParens} closing parentheses.`,
         severity: 'CRITICAL',
         line: 1,
-        whyItMatters: 'Causes expression parsing failure and compilation errors.',
-        suggestion: 'Ensure every opening parenthesis has a matching closing parenthesis.'
+        whyItMatters: 'Causes expression parsing failure.',
+        suggestion: 'Verify all opening and closing parentheses match.'
       });
     }
 
@@ -324,29 +370,29 @@ ${code}
     if (/\/\s*0\b/.test(code) || /\/\s*0\.0\b/.test(code)) {
       bugs.push({
         title: 'Runtime Error: Potential Division by Zero',
-        description: 'Arithmetic division operation divides directly by literal zero without denominator validation.',
+        description: 'Arithmetic division divides directly by literal zero.',
         severity: 'HIGH',
         line: 5,
-        whyItMatters: 'Triggers fatal arithmetic exceptions (ArithmeticException / DivisionByZeroError) at runtime.',
-        suggestion: 'Add a denominator guard check before executing division.'
+        whyItMatters: 'Triggers fatal arithmetic exceptions at runtime.',
+        suggestion: 'Add a denominator guard check before dividing.'
       });
     }
 
-    // Check infinite loop risk
+    // Check infinite loop
     if (/\bwhile\s*\(\s*(?:true|1)\s*\)/i.test(code) && !/\break\b/.test(code)) {
       bugs.push({
         title: 'Logical Bug: Unbounded Infinite Loop',
-        description: 'Loop condition evaluates to true statically without a conditional break or termination clause.',
+        description: 'Loop condition evaluates to true statically without a break clause.',
         severity: 'HIGH',
         line: 8,
-        whyItMatters: 'Causes CPU thread lock, unresponsiveness, and resource exhaustion in production.',
-        suggestion: 'Include explicit exit criteria or iteration bounds.'
+        whyItMatters: 'Causes CPU thread lock and application freeze.',
+        suggestion: 'Add explicit exit criteria or break statement.'
       });
     }
 
-    let score = 100 - (bugs.length * 20);
+    let score = 100 - (bugs.length * 25);
     if (isQuadraticOrWorse) score -= 15;
-    score = Math.max(30, Math.min(100, score));
+    score = Math.max(20, Math.min(100, score));
 
     const securityIssues = /\b(eval|exec|password|secret|api_key|token)\b/i.test(code) ? [
       {
@@ -406,7 +452,7 @@ ${code}
         }
       ],
       recommendations: [
-        profile.optimizationSuggestions[0] || 'Maintain current asymptotic bounds.',
+        profile.optimizationSuggestions[0] || 'Maintain existing asymptotic time and space boundaries.',
         'Implement defensive validation guards for all input parameters.',
         'Add comprehensive unit test coverage covering boundary and edge cases.'
       ],
