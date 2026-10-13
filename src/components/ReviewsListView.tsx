@@ -1,17 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../services/api';
 import { ReviewEntity } from '../types';
-import { Search, Eye, Trash2, Filter } from 'lucide-react';
+import { Search, Eye, Trash2 } from 'lucide-react';
 
 interface ReviewsListViewProps {
+  initialSearch?: string;
   onSelectReview: (id: string) => void;
 }
 
-export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ onSelectReview }) => {
+export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ initialSearch = '', onSelectReview }) => {
   const [reviews, setReviews] = useState<ReviewEntity[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [languageFilter, setLanguageFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (initialSearch) {
+      setSearch(initialSearch);
+    }
+  }, [initialSearch]);
 
   useEffect(() => {
     loadReviews();
@@ -21,7 +28,6 @@ export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ onSelectReview
     setLoading(true);
     const params: any = {};
     if (languageFilter !== 'ALL') params.language = languageFilter;
-    if (search) params.search = search;
 
     const res = await apiClient.get('/api/reviews', params);
     if (res.ok && Array.isArray(res.data)) {
@@ -32,13 +38,13 @@ export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ onSelectReview
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this review report?')) return;
+    if (!confirm('Are you sure you want to delete this review?')) return;
     await apiClient.delete(`/api/reviews/${id}`);
     loadReviews();
   };
 
   const filtered = reviews.filter((r) => {
-    if (!search) return true;
+    if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
       (r.file || r.fileName || '').toLowerCase().includes(q) ||
@@ -48,34 +54,34 @@ export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ onSelectReview
   });
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Review History</h1>
-          <p className="text-sm text-slate-500 mt-1">Inspect previous code quality assessments and Big-O complexity profiles.</p>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Review History</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Browse and inspect past code reviews and complexity reports.</p>
         </div>
-        <div className="text-sm font-semibold text-slate-600 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
-          {filtered.length} {filtered.length === 1 ? 'Review' : 'Reviews'} Found
+        <div className="text-xs font-medium text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
+          {filtered.length} {filtered.length === 1 ? 'review' : 'reviews'}
         </div>
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search reviews by file, language or summary..."
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:border-teal-500"
+            placeholder="Filter reviews by file name, summary or keywords..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-600 focus:bg-white"
           />
         </div>
 
         <select
           value={languageFilter}
           onChange={(e) => setLanguageFilter(e.target.value)}
-          className="bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:border-teal-500"
+          className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-teal-600"
         >
           <option value="ALL">All Languages</option>
           <option value="Java">Java</option>
@@ -89,63 +95,65 @@ export const ReviewsListView: React.FC<ReviewsListViewProps> = ({ onSelectReview
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse text-sm">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
-              <th className="py-3 px-6">File & Project</th>
-              <th className="py-3 px-6">Repository</th>
-              <th className="py-3 px-6">Language</th>
-              <th className="py-3 px-6">Health Score</th>
-              <th className="py-3 px-6">Time Complexity</th>
-              <th className="py-3 px-6">Actions</th>
+            <tr className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+              <th className="py-2.5 px-4">File Name</th>
+              <th className="py-2.5 px-4">Language</th>
+              <th className="py-2.5 px-4">Quality Score</th>
+              <th className="py-2.5 px-4">Complexity</th>
+              <th className="py-2.5 px-4">Date</th>
+              <th className="py-2.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-slate-400">
-                  No review reports match your search criteria.
+                  {loading ? 'Loading reviews...' : 'No review reports match your search criteria.'}
                 </td>
               </tr>
             ) : (
               filtered.map((r) => {
                 const score = r.overallScore || r.score || 85;
-                const repoName = typeof r.repository === 'object' ? `${r.repository.owner}/${r.repository.name}` : r.repository || 'Direct Upload';
+                const formattedDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recent';
                 return (
                   <tr
                     key={r.id || r.reviewId}
                     onClick={() => onSelectReview(r.id || r.reviewId)}
-                    className="hover:bg-slate-50 cursor-pointer transition"
+                    className="hover:bg-slate-50/80 cursor-pointer transition"
                   >
-                    <td className="py-4 px-6 font-semibold text-slate-900">
-                      {r.file || r.fileName || 'Solution.java'}
-                      <div className="text-xs font-normal text-slate-400">{r.summary?.substring(0, 45)}...</div>
+                    <td className="py-3 px-4 font-semibold text-slate-900">
+                      {r.file || r.fileName || 'Solution.code'}
+                      <div className="text-[11px] font-normal text-slate-400 truncate max-w-xs">{r.summary || 'AI code evaluation completed.'}</div>
                     </td>
-                    <td className="py-4 px-6 text-slate-600">{repoName}</td>
-                    <td className="py-4 px-6">
-                      <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700">
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">
                         {r.language}
                       </span>
                     </td>
-                    <td className="py-4 px-6 font-extrabold text-teal-700">{score}/100</td>
-                    <td className="py-4 px-6">
-                      <span className="px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 rounded-md text-xs font-mono font-semibold">
+                    <td className="py-3 px-4 font-bold text-teal-700">{score} / 100</td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded font-mono text-[11px]">
                         {r.timeComplexity || 'O(n)'}
                       </span>
                     </td>
-                    <td className="py-4 px-6 flex items-center gap-2">
+                    <td className="py-3 px-4 text-slate-400">{formattedDate}</td>
+                    <td className="py-3 px-4 text-right space-x-1">
                       <button
                         onClick={(e) => { e.stopPropagation(); onSelectReview(r.id || r.reviewId); }}
-                        className="p-2 hover:bg-slate-200 text-slate-600 rounded-lg transition"
+                        className="p-1.5 hover:bg-slate-100 text-slate-500 rounded transition cursor-pointer"
+                        title="View Report"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={(e) => handleDelete(r.id || r.reviewId, e)}
-                        className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition"
+                        className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition cursor-pointer"
+                        title="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>

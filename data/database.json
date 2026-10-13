@@ -1,6 +1,43 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "usr_1791924917631_w3apm",
+      "name": "Test Engineer",
+      "email": "test_1791924917631@test.io",
+      "passwordHash": "a09591fbdb753b6ce5348624e068cad24a2a240591fd2b26d8f0d8266ceaff2e",
+      "role": "Staff Engineer",
+      "organization": "Fintech Core",
+      "createdAt": "2026-10-13T20:55:17.634Z"
+    }
+  ],
   "reviews": [],
-  "repositories": [],
+  "repositories": [
+    {
+      "id": "repo-8404",
+      "name": "payment-service",
+      "owner": "enterprise-org",
+      "defaultBranch": "main",
+      "language": "Java",
+      "lastReviewed": "Just now",
+      "healthScore": 88,
+      "openIssues": 0,
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(1)",
+      "status": "Active",
+      "branches": [
+        "main",
+        "develop"
+      ],
+      "files": [
+        {
+          "name": "MainService.java",
+          "path": "src/main/java/MainService.java",
+          "language": "Java",
+          "size": "2.1 KB",
+          "code": "public class MainService {\n    public void execute() {\n        System.out.println(\"Service operational\");\n    }\n}"
+        }
+      ]
+    }
+  ],
   "complexityLibrary": []
 }

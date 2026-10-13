@@ -83,4 +83,8 @@ export class GitHubService {
     };
     return db.createRepository(newRepo);
   }
+
+  public static deleteRepository(id: string): boolean {
+    return db.deleteRepository(id);
+  }
 }

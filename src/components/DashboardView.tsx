@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../services/api';
 import { DashboardStats, ReviewEntity } from '../types';
-import { Shield, AlertTriangle, CheckCircle2, Cpu, GitBranch, ArrowUpRight, Plus, Eye, Trash2 } from 'lucide-react';
+import { Shield, Plus, ArrowUpRight, Eye, Trash2, ArrowRight } from 'lucide-react';
 
 interface DashboardViewProps {
   onNavigate: (view: string, id?: string) => void;
@@ -37,149 +37,147 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
     loadDashboardData();
   };
 
-  const healthScore = stats?.codeHealth || stats?.averageCodeQuality || 88;
+  const hasReviews = (stats?.totalReviews || 0) > 0;
+  const healthScore = hasReviews ? stats?.averageCodeQuality || 85 : 100;
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-slate-900">Engineering Review Dashboard</h1>
-            <span className="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-200 rounded-full text-xs font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Studio Connected
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">Continuous AI-assisted code health, algorithmic complexity profiling, and defect insights.</p>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Summary of code health, recent reviews, and complexity metrics.</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => onNavigate('new-review')}
-            className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> New AI Review
-          </button>
-        </div>
+        <button
+          onClick={() => onNavigate('new-review')}
+          className="px-3.5 py-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs rounded-lg transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" /> New Review
+        </button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total Reviews</div>
-          <div className="text-3xl font-extrabold text-slate-900">{stats?.totalReviews || 0}</div>
-          <div className="text-xs text-emerald-600 font-semibold mt-2 flex items-center gap-1">↑ Active Enterprise Pool</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Total Reviews</div>
+          <div className="text-2xl font-bold text-slate-900">{stats?.totalReviews || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-1">Processed</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Critical Vulnerabilities</div>
-          <div className="text-3xl font-extrabold text-amber-600">{stats?.bugsDetected || 0}</div>
-          <div className="text-xs text-slate-500 mt-2">Null safety & security risks</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Issues Found</div>
+          <div className="text-2xl font-bold text-amber-600">{stats?.bugsDetected || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-1">Bugs & vulnerabilities</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Avg Code Quality</div>
-          <div className="text-3xl font-extrabold text-teal-700">{stats?.totalReviews ? `${stats.averageCodeQuality}%` : '—'}</div>
-          <div className="text-xs text-teal-600 font-semibold mt-2">{stats?.totalReviews ? 'Exceeds threshold (80%)' : 'No data yet'}</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Avg Code Quality</div>
+          <div className="text-2xl font-bold text-teal-700">{hasReviews ? `${stats?.averageCodeQuality}%` : '—'}</div>
+          <div className="text-[11px] text-slate-400 mt-1">{hasReviews ? 'Quality score' : 'No data yet'}</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Avg Complexity</div>
-          <div className="text-3xl font-extrabold text-indigo-600">{stats?.totalReviews ? stats.averageComplexity : '—'}</div>
-          <div className="text-xs text-slate-500 mt-2">{stats?.totalReviews ? 'Optimal bounds maintained' : 'No iterations analyzed'}</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Avg Complexity</div>
+          <div className="text-2xl font-bold text-slate-800 font-mono text-xl">{hasReviews ? stats?.averageComplexity : '—'}</div>
+          <div className="text-[11px] text-slate-400 mt-1">{hasReviews ? 'Asymptotic bound' : 'No iterations analyzed'}</div>
         </div>
       </div>
 
-      {/* Health Score & Banner */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="space-y-3">
-          <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider">Enterprise Health Index</span>
-          <h2 className="text-3xl font-extrabold">
-            {stats?.totalReviews ? `${healthScore} / 100 — ${stats?.healthStatusText || 'Optimal Code Health'}` : '100 / 100 — Clean Baseline'}
-          </h2>
-          <p className="text-slate-300 text-sm max-w-xl">
-            {stats?.totalReviews
-              ? 'Your codebase maintains rigorous architectural compliance. Continuous AI defect inspection active.'
-              : 'Workspace initialized. Submit your first piece of source code to generate automated defect and complexity reports.'}
+      {/* Clean Health Banner */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overall Health</div>
+          <div className="text-lg font-bold text-slate-900">
+            {healthScore} / 100 — {hasReviews ? stats?.healthStatusText || 'Healthy' : 'Ready for First Review'}
+          </div>
+          <p className="text-xs text-slate-500 max-w-lg">
+            {hasReviews
+              ? 'Your code reviews are actively tracked. Run new inspections anytime to catch bugs early.'
+              : 'Submit your first piece of source code to generate automatic defect detection and Big-O profiling.'}
           </p>
         </div>
 
-        <div className="w-32 h-32 rounded-full flex items-center justify-center relative shadow-inner bg-slate-800 border-4 border-teal-500/30">
-          <div className="text-3xl font-black text-teal-400">{stats?.totalReviews ? `${healthScore}%` : '100%'}</div>
-        </div>
+        {!hasReviews && (
+          <button
+            onClick={() => onNavigate('new-review')}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+          >
+            Start First Review <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Recent Reviews Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-900">Recent AI Reviews</h3>
-          <button
-            onClick={() => onNavigate('reviews')}
-            className="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1"
-          >
-            View All Reviews <ArrowUpRight className="w-4 h-4" />
-          </button>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-slate-900">Recent Reviews</h3>
+          {reviews.length > 0 && (
+            <button
+              onClick={() => onNavigate('reviews')}
+              className="text-xs font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1 cursor-pointer"
+            >
+              View all <ArrowUpRight className="w-3 h-3" />
+            </button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
-                <th className="py-3 px-6">Project / File</th>
-                <th className="py-3 px-6">Repository</th>
-                <th className="py-3 px-6">Language</th>
-                <th className="py-3 px-6">Score</th>
-                <th className="py-3 px-6">Time Complexity</th>
-                <th className="py-3 px-6">Actions</th>
+              <tr className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+                <th className="py-2.5 px-4">File Name</th>
+                <th className="py-2.5 px-4">Language</th>
+                <th className="py-2.5 px-4">Quality</th>
+                <th className="py-2.5 px-4">Time Complexity</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {reviews.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    No reviews executed yet. Click "New AI Review" to start analyzing source code.
+                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                    No reviews executed yet. Click "New Review" above to test your code.
                   </td>
                 </tr>
               ) : (
                 reviews.map((r) => {
                   const score = r.overallScore || r.score || 85;
-                  const repoName = typeof r.repository === 'object' ? `${r.repository.owner}/${r.repository.name}` : r.repository || 'Direct Upload';
                   return (
                     <tr
                       key={r.id || r.reviewId}
                       onClick={() => onNavigate('review-detail', r.id || r.reviewId)}
                       className="hover:bg-slate-50/80 cursor-pointer transition"
                     >
-                      <td className="py-4 px-6 font-semibold text-slate-900">
-                        {r.file || r.fileName || 'Solution.java'}
-                        <div className="text-xs font-normal text-slate-400">{r.summary?.substring(0, 45)}...</div>
+                      <td className="py-3 px-4 font-semibold text-slate-900">
+                        {r.file || r.fileName || 'Solution.code'}
+                        <div className="text-[11px] font-normal text-slate-400 truncate max-w-xs">{r.summary}</div>
                       </td>
-                      <td className="py-4 px-6 text-slate-600 font-medium">{repoName}</td>
-                      <td className="py-4 px-6">
-                        <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700">
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">
                           {r.language}
                         </span>
                       </td>
-                      <td className="py-4 px-6 font-extrabold text-teal-700">{score}/100</td>
-                      <td className="py-4 px-6">
-                        <span className="px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 rounded-md text-xs font-mono font-semibold">
+                      <td className="py-3 px-4 font-bold text-teal-700">{score} / 100</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded font-mono text-[11px]">
                           {r.timeComplexity || 'O(n)'}
                         </span>
                       </td>
-                      <td className="py-4 px-6 flex items-center gap-2">
+                      <td className="py-3 px-4 text-right space-x-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); onNavigate('review-detail', r.id || r.reviewId); }}
-                          className="p-2 hover:bg-slate-200 text-slate-600 rounded-lg transition"
+                          className="p-1.5 hover:bg-slate-100 text-slate-500 rounded transition cursor-pointer"
                           title="Inspect Review"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => handleDelete(r.id || r.reviewId, e)}
-                          className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition"
+                          className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition cursor-pointer"
                           title="Delete Review"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
                     </tr>

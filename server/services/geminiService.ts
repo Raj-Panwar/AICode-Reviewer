@@ -115,7 +115,7 @@ ${code}
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: userPrompt,
         config: {
           systemInstruction,
@@ -240,7 +240,7 @@ ${code}
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: `Perform precise Big-O complexity analysis on the following ${language} code:\n\`\`\`\n${code}\n\`\`\``,
         config: {
           systemInstruction: 'You are an algorithms expert. Provide exact Big-O time and space complexity with clear explanations and identified bottlenecks in JSON format.',
@@ -288,38 +288,91 @@ ${code}
     const time = profile.timeComplexity;
     const space = profile.spaceComplexity;
     const isQuadraticOrWorse = /O\((?:n[\^²³456789]|2\^|2ⁿ|n!)/.test(time);
-    const hasNullRisk = !/requireNonNull|if\s*\([^)]*null\)|option|unwrap_or|\?\./i.test(code);
+    
+    // Check for explicit code errors / flaws
+    const bugs: Array<{ title: string; description: string; severity: string; line: number; whyItMatters: string; suggestion: string }> = [];
 
-    let score = 92;
-    if (isQuadraticOrWorse) score -= 15;
-    else if (time === 'O(n log n)') score -= 4;
-    else if (time === 'O(1)') score += 5;
-    if (hasNullRisk) score -= 8;
-    score = Math.max(30, Math.min(98, score));
+    // Check unmatched braces
+    let openBraces = (code.match(/\{/g) || []).length;
+    let closeBraces = (code.match(/\}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      bugs.push({
+        title: 'Syntax Error: Unmatched Braces ({ })',
+        description: `Found ${openBraces} opening braces and ${closeBraces} closing braces. Scope blocks are misaligned.`,
+        severity: 'CRITICAL',
+        line: 1,
+        whyItMatters: 'Prevents compiler / interpreter from parsing the source file successfully.',
+        suggestion: 'Verify all opening and closing curly braces are correctly paired.'
+      });
+    }
+
+    // Check unmatched parentheses
+    let openParens = (code.match(/\(/g) || []).length;
+    let closeParens = (code.match(/\)/g) || []).length;
+    if (openParens !== closeParens) {
+      bugs.push({
+        title: 'Syntax Error: Unmatched Parentheses (( ))',
+        description: `Found ${openParens} opening parentheses and ${closeParens} closing parentheses.`,
+        severity: 'CRITICAL',
+        line: 1,
+        whyItMatters: 'Causes expression parsing failure and compilation errors.',
+        suggestion: 'Ensure every opening parenthesis has a matching closing parenthesis.'
+      });
+    }
+
+    // Check division by zero
+    if (/\/\s*0\b/.test(code) || /\/\s*0\.0\b/.test(code)) {
+      bugs.push({
+        title: 'Runtime Error: Potential Division by Zero',
+        description: 'Arithmetic division operation divides directly by literal zero without denominator validation.',
+        severity: 'HIGH',
+        line: 5,
+        whyItMatters: 'Triggers fatal arithmetic exceptions (ArithmeticException / DivisionByZeroError) at runtime.',
+        suggestion: 'Add a denominator guard check before executing division.'
+      });
+    }
+
+    // Check infinite loop risk
+    if (/\bwhile\s*\(\s*(?:true|1)\s*\)/i.test(code) && !/\break\b/.test(code)) {
+      bugs.push({
+        title: 'Logical Bug: Unbounded Infinite Loop',
+        description: 'Loop condition evaluates to true statically without a conditional break or termination clause.',
+        severity: 'HIGH',
+        line: 8,
+        whyItMatters: 'Causes CPU thread lock, unresponsiveness, and resource exhaustion in production.',
+        suggestion: 'Include explicit exit criteria or iteration bounds.'
+      });
+    }
+
+    // Default bug if no syntax error found but potential null risk
+    const hasNullRisk = !/requireNonNull|if\s*\([^)]*null\)|option|unwrap_or|\?\./i.test(code);
+    if (bugs.length === 0 && hasNullRisk) {
+      bugs.push({
+        title: 'Potential Unchecked Null / Nil Reference',
+        description: 'Function parameters are accessed directly without verifying null or undefined bounds.',
+        severity: 'MEDIUM',
+        line: 3,
+        whyItMatters: 'Can result in NullPointerException or TypeError when receiving unexpected nil inputs.',
+        suggestion: 'Add null guard clause at the start of the function.'
+      });
+    }
+
+    let score = 92 - (bugs.length * 15);
+    if (isQuadraticOrWorse) score -= 10;
+    score = Math.max(20, Math.min(95, score));
 
     return {
-      summary: `Automated code analysis for ${fileName} (${language}). Demonstrates asymptotic runtime ${time} and ${space} auxiliary space.`,
+      summary: `Analyzed ${fileName} (${language}). Detected ${bugs.length} defect(s). Asymptotic runtime: ${time}, auxiliary space: ${space}.`,
       overallScore: score,
       language,
       complexity: {
         time,
         space,
         explanation: profile.explanation,
-        bottleneck: profile.bottlenecks[0] || 'Sequential linear iteration',
+        bottleneck: profile.bottlenecks[0] || 'Sequential iteration',
         suggestedApproach: profile.suggestedApproach
       },
-      bugs: hasNullRisk
-        ? [
-            {
-              title: 'Potential Unchecked Reference / Null Dereference',
-              description: 'Method receives parameter without explicit null or undefined boundary verification.',
-              severity: 'HIGH',
-              line: 12,
-              whyItMatters: 'Can trigger unhandled exceptions and unexpected service crashes on nil inputs.',
-              suggestion: 'Add defensive argument checks or wrap nullable returns in Option/Optional types.'
-            }
-          ]
-        : [],
+      bugs,
       securityIssues: [
         {
           title: 'Input Validation Boundary Guard',

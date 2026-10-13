@@ -53,6 +53,19 @@ export class AuthController {
     return sendJson(res, 200, { success: true, user: safeUser });
   }
 
+  public static async updateProfile(req: AuthenticatedRequest, res: ServerResponse) {
+    if (!req.user) {
+      return sendError(res, 401, 'UNAUTHORIZED', 'Not authenticated');
+    }
+    const { name, role, organization, githubUsername } = req.body || {};
+    try {
+      const user = AuthService.updateProfile(req.user.id, { name, role, organization, githubUsername });
+      return sendJson(res, 200, { success: true, user });
+    } catch (err: any) {
+      return sendError(res, 400, 'UPDATE_FAILED', err.message);
+    }
+  }
+
   public static async logout(_req: AuthenticatedRequest, res: ServerResponse) {
     return sendJson(res, 200, { success: true, message: 'Logged out successfully.' });
   }

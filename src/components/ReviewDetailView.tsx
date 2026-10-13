@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../services/api';
 import { ReviewEntity } from '../types';
-import { Shield, AlertTriangle, CheckCircle2, Cpu, Copy, Printer, ArrowLeft, Terminal } from 'lucide-react';
+import { Copy, Printer, ArrowLeft, Check, Terminal } from 'lucide-react';
 
 interface ReviewDetailViewProps {
   reviewId: string;
@@ -12,7 +12,7 @@ export const ReviewDetailView: React.FC<ReviewDetailViewProps> = ({ reviewId, on
   const [review, setReview] = useState<ReviewEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'issues' | 'complexity' | 'code' | 'optimized'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'complexity' | 'optimized'>('issues');
 
   useEffect(() => {
     loadReviewDetail();
@@ -38,17 +38,22 @@ export const ReviewDetailView: React.FC<ReviewDetailViewProps> = ({ reviewId, on
   if (loading) {
     return (
       <div className="py-24 text-center">
-        <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-500 font-medium">Loading AI review analysis report...</p>
+        <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-slate-500 text-xs">Loading report...</p>
       </div>
     );
   }
 
   if (!review) {
     return (
-      <div className="py-24 text-center">
-        <p className="text-slate-600 font-bold mb-4">Review report not found.</p>
-        <button onClick={onBack} className="px-4 py-2 bg-slate-900 text-white rounded-xl">Back to Dashboard</button>
+      <div className="py-24 text-center space-y-3">
+        <p className="text-slate-700 font-semibold text-sm">Review report not found.</p>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-medium cursor-pointer"
+        >
+          Back to Dashboard
+        </button>
       </div>
     );
   }
@@ -61,127 +66,133 @@ export const ReviewDetailView: React.FC<ReviewDetailViewProps> = ({ reviewId, on
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-16">
-      {/* Top bar with back & actions */}
+    <div className="max-w-5xl mx-auto space-y-6 pb-16">
+      {/* Top Bar */}
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-sm transition shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-xs transition cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Reviews
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => window.print()}
-            className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-sm transition shadow-sm flex items-center gap-2"
-          >
-            <Printer className="w-4 h-4" /> Export Report
-          </button>
-        </div>
+        <button
+          onClick={() => window.print()}
+          className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer"
+        >
+          <Printer className="w-3.5 h-3.5" /> Export / Print
+        </button>
       </div>
 
-      {/* Header Banner */}
-      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      {/* Header Card */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="px-3 py-1 bg-teal-50 text-teal-800 font-bold rounded-lg text-xs">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 font-medium rounded text-[11px]">
               {review.language}
             </span>
-            <span className="text-sm font-semibold text-slate-500">
-              {review.file || review.fileName || 'Solution.java'}
+            <span className="text-xs font-mono text-slate-500 font-semibold">
+              {review.file || review.fileName || 'Solution.code'}
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900">AI Code Inspection Report</h1>
-          <p className="text-slate-500 text-sm mt-1">{review.summary}</p>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight">Code Review Inspection Report</h1>
+          <p className="text-slate-500 text-xs mt-1 max-w-2xl leading-relaxed">{review.summary}</p>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-          <div className="text-right">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Health Index</div>
-            <div className="text-3xl font-black text-teal-700">{score}/100</div>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-700 flex items-center justify-center font-bold text-xl">
-            ⚡
-          </div>
+        <div className="text-right sm:border-l sm:border-slate-100 sm:pl-6 flex-shrink-0">
+          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Quality Score</div>
+          <div className="text-3xl font-extrabold text-teal-700">{score} <span className="text-xs text-slate-400 font-normal">/ 100</span></div>
         </div>
       </div>
 
-      {/* Complexity & Key Metrics Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Time Complexity</div>
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 font-mono font-bold text-lg rounded-xl">
+      {/* Complexity Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Time Complexity</div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 bg-slate-100 font-mono font-bold text-sm text-slate-800 rounded">
               {comp.time}
             </span>
-            <span className="text-sm text-slate-600 font-medium">{comp.explanation}</span>
+            <span className="text-xs text-slate-600 truncate">{comp.explanation}</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Space Complexity</div>
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-800 font-mono font-bold text-lg rounded-xl">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] font-medium text-slate-400 mb-1">Space Complexity</div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 bg-slate-100 font-mono font-bold text-sm text-slate-800 rounded">
               {comp.space}
             </span>
-            <span className="text-sm text-slate-600 font-medium">Auxiliary memory footprint boundary.</span>
+            <span className="text-xs text-slate-600">Memory footprint</span>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('issues')}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
-            activeTab === 'issues' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition cursor-pointer ${
+            activeTab === 'issues'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          Detected Issues ({review.issues?.length || 0})
+          Issues Found ({review.issues?.length || 0})
         </button>
         <button
           onClick={() => setActiveTab('complexity')}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
-            activeTab === 'complexity' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition cursor-pointer ${
+            activeTab === 'complexity'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          Big-O Analysis & Bottlenecks
+          Complexity Details
         </button>
         <button
           onClick={() => setActiveTab('optimized')}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
-            activeTab === 'optimized' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition cursor-pointer ${
+            activeTab === 'optimized'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          Optimized Mentor Solution
+          Optimized Code
         </button>
       </div>
 
-      {/* Tab Content: Issues */}
+      {/* Issues Tab */}
       {activeTab === 'issues' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {(!review.issues || review.issues.length === 0) ? (
-            <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-500">
-              No critical bugs or vulnerabilities detected in this revision.
+            <div className="bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-500 text-xs">
+              No critical bugs or security vulnerabilities found.
             </div>
           ) : (
             review.issues.map((iss, idx) => (
-              <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      iss.severity === 'CRITICAL' || iss.severity === 'HIGH' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        iss.severity === 'CRITICAL' || iss.severity === 'HIGH'
+                          ? 'bg-red-50 text-red-700 border border-red-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}
+                    >
                       {iss.severity}
                     </span>
-                    <h3 className="font-bold text-slate-900 text-base">{iss.title}</h3>
+                    <h3 className="font-bold text-slate-900 text-xs">{iss.title}</h3>
                   </div>
-                  <span className="text-xs font-mono font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">Line {iss.line || 1}</span>
+                  <span className="text-[11px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                    Line {iss.line || 1}
+                  </span>
                 </div>
-                <p className="text-sm text-slate-600">{iss.description}</p>
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-700">
-                  <strong className="text-slate-900">Suggested Fix:</strong> {iss.suggestedFix || iss.whyItMatters}
+                <p className="text-xs text-slate-600 leading-relaxed">{iss.description}</p>
+                <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700">
+                  <strong className="text-slate-900 font-semibold">Suggested Fix:</strong>{' '}
+                  {iss.suggestedFix || iss.whyItMatters}
                 </div>
               </div>
             ))
@@ -189,43 +200,45 @@ export const ReviewDetailView: React.FC<ReviewDetailViewProps> = ({ reviewId, on
         </div>
       )}
 
-      {/* Tab Content: Complexity */}
+      {/* Complexity Tab */}
       {activeTab === 'complexity' && (
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <h3 className="text-lg font-bold text-slate-900">Asymptotic Complexity Deep Dive</h3>
-          <div className="space-y-4 text-sm text-slate-700">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <strong className="text-slate-900 block mb-1">Time Complexity: {comp.time}</strong>
-              <p>{comp.explanation}</p>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <strong className="text-slate-900 block mb-1">Identified Bottleneck</strong>
-              <p>{comp.bottleneck || 'Sequential iteration pattern over unindexed inputs.'}</p>
-            </div>
-            <div className="p-4 bg-teal-50 rounded-xl border border-teal-200 text-teal-900">
-              <strong className="block mb-1">Recommended Approach</strong>
-              <p>{comp.suggestedApproach || 'Utilize hash map or memoization for O(1) expected time complexity.'}</p>
-            </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4 text-xs text-slate-700">
+          <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
+            <strong className="text-slate-900 block mb-1">Time Complexity: {comp.time}</strong>
+            <p>{comp.explanation}</p>
           </div>
+          {comp.bottleneck && (
+            <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
+              <strong className="text-slate-900 block mb-1">Identified Bottleneck</strong>
+              <p>{comp.bottleneck}</p>
+            </div>
+          )}
+          {comp.suggestedApproach && (
+            <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-lg text-teal-900">
+              <strong className="block mb-1">Recommended Approach</strong>
+              <p>{comp.suggestedApproach}</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Tab Content: Optimized Code */}
+      {/* Optimized Code Tab */}
       {activeTab === 'optimized' && (
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 text-white space-y-4 shadow-xl">
+        <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 text-white space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-teal-400">
-              <Terminal className="w-4 h-4" /> Recommended Optimized Implementation
+            <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <Terminal className="w-3.5 h-3.5 text-teal-400" /> Recommended Optimized Code
             </div>
             <button
               onClick={copyOptimized}
-              className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 border border-slate-700"
+              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded transition flex items-center gap-1 border border-slate-700 cursor-pointer"
             >
-              <Copy className="w-3.5 h-3.5" /> {copied ? 'Copied!' : 'Copy Code'}
+              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
-          <pre className="font-mono text-xs text-slate-100 bg-slate-950 p-5 rounded-xl overflow-x-auto leading-relaxed">
-            {review.optimizedCode || '// No optimization diff generated.'}
+          <pre className="font-mono text-xs text-slate-100 bg-slate-950 p-4 rounded-lg overflow-x-auto leading-relaxed border border-slate-800">
+            {review.optimizedCode || '// No optimization code provided.'}
           </pre>
         </div>
       )}

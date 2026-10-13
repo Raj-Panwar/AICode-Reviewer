@@ -302,6 +302,16 @@ class JsonDatabase {
     return repo;
   }
 
+  public deleteRepository(id: string): boolean {
+    const initialLen = this.data.repositories.length;
+    this.data.repositories = this.data.repositories.filter((r) => r.id !== id && r.name !== id);
+    if (this.data.repositories.length !== initialLen) {
+      this.persist();
+      return true;
+    }
+    return false;
+  }
+
   // --- Complexity Library ---
   public getComplexityLibrary(): ComplexityCaseStudy[] {
     return [...this.data.complexityLibrary];

@@ -80,6 +80,9 @@ export async function handleApiRoute(
   if (pathname === '/api/auth/me' && method === 'GET') {
     return AuthController.me(authReq, res);
   }
+  if (pathname === '/api/auth/profile' && (method === 'PUT' || method === 'POST')) {
+    return AuthController.updateProfile(authReq, res);
+  }
 
   // --- Review Routes ---
   if ((pathname === '/api/reviews/analyze' || pathname === '/api/reviews') && method === 'POST') {
@@ -139,6 +142,9 @@ export async function handleApiRoute(
   const repoSingleMatch = pathname.match(/^\/api\/repositories\/([^/]+)$/);
   if (repoSingleMatch && method === 'GET') {
     return GitHubController.getRepository(authReq, res, repoSingleMatch[1]);
+  }
+  if (repoSingleMatch && method === 'DELETE') {
+    return GitHubController.deleteRepository(authReq, res, repoSingleMatch[1]);
   }
 
   // Unhandled API endpoint

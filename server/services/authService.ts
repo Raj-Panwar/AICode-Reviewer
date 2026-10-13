@@ -124,4 +124,13 @@ export class AuthService {
     const { passwordHash, ...safeUser } = user;
     return { user: safeUser, token };
   }
+
+  public static updateProfile(userId: string, data: { name?: string; role?: string; organization?: string; githubUsername?: string }): Omit<User, 'passwordHash'> {
+    const user = db.updateUser(userId, data);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const { passwordHash, ...safeUser } = user;
+    return safeUser;
+  }
 }

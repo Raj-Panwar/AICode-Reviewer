@@ -64,4 +64,12 @@ export class GitHubController {
     res.writeHead(302, { Location: '/?github=connected' });
     res.end();
   }
+
+  public static async deleteRepository(req: AuthenticatedRequest, res: ServerResponse, id: string) {
+    const success = GitHubService.deleteRepository(id);
+    if (!success) {
+      return sendError(res, 404, 'NOT_FOUND', 'Repository not found');
+    }
+    return sendJson(res, 200, { success: true, message: 'Repository disconnected.' });
+  }
 }
