@@ -69,7 +69,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onGetStarted, onSignIn
             onClick={onSignIn}
             className="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-2xl border border-slate-700 transition text-base"
           >
-            Sign In with Google Workspace
+            Sign in with Google
           </button>
         </div>
       </section>

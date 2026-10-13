@@ -60,8 +60,8 @@ export const SettingsView: React.FC = () => {
       </div>
 
       <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <h3 className="text-lg font-bold text-slate-900">Google Workspace Authentication</h3>
-        <p className="text-sm text-slate-600">Connected with corporate Google SSO for secure workspace access.</p>
+        <h3 className="text-lg font-bold text-slate-900">Google Account Authentication</h3>
+        <p className="text-sm text-slate-600">Connected with your Google Account for fast, secure sign-in.</p>
         <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-emerald-500"></div>

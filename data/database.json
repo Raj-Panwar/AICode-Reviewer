@@ -135,6 +135,15 @@
       "role": "Staff Engineer",
       "organization": "Fintech Core",
       "createdAt": "2026-10-13T20:06:29.823Z"
+    },
+    {
+      "id": "usr_1791922163221_0q9rk",
+      "name": "Test Engineer",
+      "email": "test_1791922163220@test.io",
+      "passwordHash": "a09591fbdb753b6ce5348624e068cad24a2a240591fd2b26d8f0d8266ceaff2e",
+      "role": "Staff Engineer",
+      "organization": "Fintech Core",
+      "createdAt": "2026-10-13T20:09:23.223Z"
     }
   ],
   "reviews": [
