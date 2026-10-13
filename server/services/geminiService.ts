@@ -344,67 +344,56 @@ ${code}
       });
     }
 
-    // Default bug if no syntax error found but potential null risk
-    const hasNullRisk = !/requireNonNull|if\s*\([^)]*null\)|option|unwrap_or|\?\./i.test(code);
-    if (bugs.length === 0 && hasNullRisk) {
-      bugs.push({
-        title: 'Potential Unchecked Null / Nil Reference',
-        description: 'Function parameters are accessed directly without verifying null or undefined bounds.',
-        severity: 'MEDIUM',
-        line: 3,
-        whyItMatters: 'Can result in NullPointerException or TypeError when receiving unexpected nil inputs.',
-        suggestion: 'Add null guard clause at the start of the function.'
-      });
-    }
+    let score = 100 - (bugs.length * 20);
+    if (isQuadraticOrWorse) score -= 15;
+    score = Math.max(30, Math.min(100, score));
 
-    let score = 92 - (bugs.length * 15);
-    if (isQuadraticOrWorse) score -= 10;
-    score = Math.max(20, Math.min(95, score));
+    const securityIssues = /\b(eval|exec|password|secret|api_key|token)\b/i.test(code) ? [
+      {
+        title: 'Sensitive Credential or Eval Usage Risk',
+        description: 'Code contains references to eval, exec, or credential keywords.',
+        severity: 'HIGH',
+        line: 4,
+        whyItMatters: 'Exposes application to code injection or credential leakage.',
+        suggestion: 'Avoid dynamic code evaluation and store secrets securely in environment variables.'
+      }
+    ] : [];
+
+    const performanceIssues = isQuadraticOrWorse ? [
+      {
+        title: `${time} Asymptotic Bottleneck`,
+        description: profile.bottlenecks[0] || 'Nested iterations scale quadratically or worse with input size.',
+        severity: 'HIGH',
+        line: 6,
+        whyItMatters: 'Execution time degrades rapidly for large datasets.',
+        suggestion: profile.optimizationSuggestions[0] || 'Optimize loop bounds or introduce hash indexing.'
+      }
+    ] : [];
 
     return {
-      summary: `Analyzed ${fileName} (${language}). Detected ${bugs.length} defect(s). Asymptotic runtime: ${time}, auxiliary space: ${space}.`,
+      summary: `Analyzed ${fileName} (${language}). Detected ${bugs.length} syntax/runtime issue(s). Runtime: ${time}, Space: ${space}.`,
       overallScore: score,
       language,
       complexity: {
         time,
         space,
         explanation: profile.explanation,
-        bottleneck: profile.bottlenecks[0] || 'Sequential iteration',
+        bottleneck: profile.bottlenecks[0] || 'Optimal traversal',
         suggestedApproach: profile.suggestedApproach
       },
       bugs,
-      securityIssues: [
+      securityIssues,
+      codeQuality: bugs.length === 0 ? [] : [
         {
-          title: 'Input Validation Boundary Guard',
-          description: 'Input arguments are processed directly without bounds or range assertions.',
+          title: 'Code Refactoring Advice',
+          description: 'Address flagged syntax or runtime exceptions to ensure robust execution.',
           severity: 'MEDIUM',
-          line: 8,
-          whyItMatters: 'Unvalidated inputs can lead to resource exhaustion or unexpected state transitions.',
-          suggestion: 'Validate array length and numeric bounds before entering execution loop.'
+          line: 1,
+          whyItMatters: 'Improves reliability and test coverage.',
+          suggestion: 'Refactor flagged sections.'
         }
       ],
-      codeQuality: [
-        {
-          title: 'Idiomatic Type Assertions & Documentation',
-          description: 'Methods should feature standard docstrings and strict return annotations.',
-          severity: 'LOW',
-          line: 4,
-          whyItMatters: 'Aids maintainability, static analysis tools, and code clarity for collaborators.',
-          suggestion: 'Include function header documentation and explicit parameter types.'
-        }
-      ],
-      performanceIssues: isQuadraticOrWorse
-        ? [
-            {
-              title: `${time} Algorithmic Bottleneck`,
-              description: profile.bottlenecks[0] || 'Nested loop or repeated linear scan degrades scalability.',
-              severity: 'HIGH',
-              line: 18,
-              whyItMatters: 'Execution time degrades substantially as workload volume increases.',
-              suggestion: profile.optimizationSuggestions[0] || 'Replace repeated linear scans with an indexed collection or hash map.'
-            }
-          ]
-        : [],
+      performanceIssues,
       optimizations: [
         {
           title: isQuadraticOrWorse ? 'Linear Hash-Indexed Optimization' : 'Algorithmic Optimization',
